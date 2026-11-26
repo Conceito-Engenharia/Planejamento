@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Planejamento de Obras</title>
+<style>
+  :root{
+    --bg:#F4F5F8;
+    --card:#FFFFFF;
+    --card-alt:#F8F9FB;
+    --border:#E1E5EC;
+    --border-strong:#C9D0DB;
+    --text:#151A23;
+    --text-secondary:#5B6475;
+    --accent:#1F3A68;
+    --accent-light:#2E4F86;
+    --accent-soft:#E8EEF8;
+    --bar:#8A9BB8;
+    --bar-soft:#C9D7EF;
+    --ok:#15803D;
+    --ok-soft:#DCFCE7;
+    --warn:#B45309;
+    --warn-soft:#FEF3C7;
+    --danger:#B91C1C;
+    --danger-soft:#FEE2E2;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:14px;line-height:1.45;
+  }
+  button{font-family:inherit;}
+  .app{max-width:1360px;margin:0 auto;padding:20px 20px 40px;}
+
+  /* topo */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+  .brand h1{margin:0;font-size:20px;font-weight:800;letter-spacing:.2px;color:var(--accent);}
+  .brand p{margin:2px 0 0;color:var(--text-secondary);font-size:13px;}
+  .sync{font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;}
+  .sync .dot{width:8px;height:8px;border-radius:50%;background:#9CA3AF;}
+  .sync.ok .dot{background:var(--ok);}
+  .sync.local .dot{background:var(--warn);}
+
+  .layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start;}
+  @media (max-width: 900px){ .layout{grid-template-columns:minmax(0,1fr);} }
+
+  /* menu lateral */
+  .sidebar{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;position:sticky;top:12px;}
+  @media (max-width: 900px){ .sidebar{position:static;} }
+  .nav-btn{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;
+    background:transparent;border:none;border-radius:8px;padding:9px 10px;font-size:13.5px;font-weight:600;
+    color:var(--text-secondary);cursor:pointer;
+  }
+  .nav-btn:hover{background:var(--card-alt);color:var(--text);}
+  .nav-btn.active{background:var(--accent-soft);color:var(--accent);}
+  .nav-btn .badge{font-size:11px;font-weight:700;color:var(--text-secondary);background:var(--card-alt);border:1px solid var(--border);border-radius:10px;padding:0 7px;}
+  .nav-label{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.6px;margin:12px 10px 4px;}
+  .nav-sep{height:1px;background:var(--border);margin:8px 4px;}
+  .nav-empty{font-size:12.5px;color:var(--text-secondary);padding:4px 10px 8px;}
+  .nav-add{
+    width:100%;margin-top:6px;padding:9px;border-radius:8px;border:1px dashed var(--accent);
+    background:transparent;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer;
+  }
+  .nav-add:hover{background:var(--accent-soft);}
+
+  /* conteúdo */
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+  .page-head h2{margin:0;font-size:22px;font-weight:800;}
+  .page-head .sub{color:var(--text-secondary);font-size:13px;margin-top:2px;}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+  .tab{
+    background:transparent;border:none;border-bottom:2px solid transparent;padding:9px 12px;margin-bottom:-1px;
+    font-size:13.5px;font-weight:700;color:var(--text-secondary);cursor:pointer;
+  }
+  .tab:hover{color:var(--text);}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .card + .card{margin-top:14px;}
+  .muted{color:var(--text-secondary);}
+  .small{font-size:12px;}
+  .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .spacer{flex:1;}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:700;
+    border:1px solid var(--border-strong);background:var(--card);color:var(--text);cursor:pointer;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn.primary:hover{background:var(--accent-light);color:#fff;}
+  .btn.whats{background:#128C4B;border-color:#128C4B;color:#fff;}
+  .btn.whats:hover{background:#0F7A41;color:#fff;}
+  .btn.danger{color:var(--danger);border-color:#F3B4B4;}
+  .btn.danger:hover{background:var(--danger-soft);}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--text-secondary);}
+  .btn.ghost:hover{color:var(--accent);background:var(--accent-soft);}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .icon-btn{
+    background:transparent;border:none;cursor:pointer;color:var(--text-secondary);padding:3px 6px;border-radius:6px;font-size:13px;
+  }
+  .icon-btn:hover{background:var(--card-alt);color:var(--accent);}
+
+  /* seletor de semana */
+  .week-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .week-nav{display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .week-nav button{background:transparent;border:none;padding:8px 12px;cursor:pointer;font-size:14px;color:var(--text-secondary);}
+  .week-nav button:hover{background:var(--card-alt);color:var(--accent);}
+  .week-nav .label{padding:8px 12px;font-weight:800;font-size:14px;border-left:1px solid var(--border);border-right:1px solid var(--border);min-width:170px;text-align:center;}
+  .week-hint{font-size:12.5px;color:var(--text-secondary);}
+  .week-hint b{color:var(--text);}
+
+  /* cobrança */
+  .tracker{display:flex;gap:8px;flex-wrap:wrap;}
+  .track-chip{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);background:var(--card);
+    border-radius:20px;padding:6px 12px 6px 9px;font-size:12.5px;font-weight:700;color:var(--text-secondary);cursor:pointer;user-select:none;
+  }
+  .track-chip input{margin:0;accent-color:var(--ok);width:15px;height:15px;cursor:pointer;}
+  .track-chip.on{background:var(--ok-soft);border-color:#A7E3BC;color:var(--ok);}
+  .status-chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:12px;background:var(--card-alt);color:var(--text-secondary);border:1px solid var(--border);}
+  .status-chip.on{background:var(--ok-soft);color:var(--ok);border-color:#A7E3BC;}
+
+  /* lista de serviços (é o que vira imagem) */
+  .export-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px 22px 18px;}
+  .export-head{border-bottom:2px solid var(--accent);padding-bottom:12px;margin-bottom:14px;}
+  .export-head .company{font-size:11.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--text-secondary);}
+  .export-head h3{margin:4px 0 2px;font-size:19px;font-weight:800;color:var(--accent);}
+  .export-head .period{font-size:13.5px;font-weight:700;color:var(--text);}
+  .group-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);margin:16px 0 8px;}
+  .group-title:first-of-type{margin-top:4px;}
+  .svc{border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:9px;break-inside:avoid;}
+  .svc-top{display:flex;align-items:flex-start;gap:10px;}
+  .svc-num{
+    flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;margin-top:1px;
+  }
+  .svc-main{flex:1;min-width:0;}
+  .svc-name{font-weight:800;font-size:14.5px;}
+  .svc-meta{font-size:12px;color:var(--text-secondary);margin-top:1px;}
+  .svc-tag{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:9px;margin-left:6px;vertical-align:1px;}
+  .svc-tag.start{background:var(--accent-soft);color:var(--accent);}
+  .svc-tag.cont{background:var(--warn-soft);color:var(--warn);}
+  .mat-title{font-size:11.5px;font-weight:800;color:var(--text-secondary);margin:9px 0 4px;}
+  .mat-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:2px 14px;}
+  .mat-list li{display:flex;align-items:center;gap:6px;font-size:13px;padding:2px 0;}
+  .mat-list li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--bar);flex-shrink:0;}
+  .mat-list li.extra::before{background:var(--ok);}
+  .mat-list li.removed{color:var(--text-secondary);text-decoration:line-through;}
+  .mat-list li.removed::before{background:var(--border-strong);}
+  .mat-list li .icon-btn{padding:0 5px;font-size:12px;line-height:1.4;}
+  .mat-empty{font-size:12.5px;color:var(--text-secondary);font-style:italic;margin-top:6px;}
+  .svc-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .svc-tools input{flex:1;min-width:160px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;font-size:12.5px;font-family:inherit;}
+  .svc-tools .btn{padding:5px 10px;font-size:12px;}
+  .export-note{margin-top:14px;padding:10px 12px;background:var(--card-alt);border-radius:8px;font-size:12px;color:var(--text-secondary);}
+  .export-empty{padding:22px;text-align:center;color:var(--text-secondary);}
+  .actions-bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;}
+
+  /* visão geral */
+  .overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .ov-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:9px;}
+  .ov-card h3{margin:0;font-size:16px;font-weight:800;}
+  .ov-list{margin:0;padding-left:18px;font-size:13px;}
+  .ov-list li{margin:2px 0;}
+  .ov-count{font-size:12.5px;color:var(--text-secondary);}
+
+  /* calendário (gantt por semana) */
+  .gantt-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);}
+  .gantt{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%;}
+  .gantt th,.gantt td{border-bottom:1px solid var(--border);padding:0;}
+  .gantt th{background:var(--card-alt);font-size:10.5px;font-weight:700;color:var(--text-secondary);height:40px;}
+  .gantt .name-col{
+    position:sticky;left:0;z-index:2;background:var(--card);min-width:260px;max-width:320px;padding:6px 10px;
+    border-right:1px solid var(--border);text-align:left;
+  }
+  .gantt th.name-col{background:var(--card-alt);z-index:3;}
+  .gantt .name-col .t{font-weight:700;}
+  .gantt .name-col .d{font-size:11px;color:var(--text-secondary);}
+  .gantt .wk{width:44px;min-width:44px;text-align:center;border-left:1px solid #EEF0F4;cursor:pointer;line-height:1.2;}
+  .gantt th.wk:hover{color:var(--accent);background:var(--accent-soft);}
+  .gantt .wk.now{background:#FFF8E6;}
+  .gantt th.wk.now{background:#FDECC0;color:#7C4A03;}
+  .gantt .wk.target{background:var(--accent-soft);}
+  .gantt th.wk.target{background:var(--accent);color:#fff;}
+  .gantt td.wk .bar{height:14px;margin:0 -1px;background:var(--bar);}
+  .gantt td.wk .bar.first{border-top-left-radius:7px;border-bottom-left-radius:7px;margin-left:4px;}
+  .gantt td.wk .bar.last{border-top-right-radius:7px;border-bottom-right-radius:7px;margin-right:4px;}
+  .gantt tr.etapa td{background:var(--card-alt);font-weight:800;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);padding:6px 10px;}
+  .gantt tr.etapa td.name-col{background:var(--card-alt);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary);margin:10px 2px 0;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend i{width:14px;height:10px;border-radius:3px;display:inline-block;}
+
+  /* tabela do cronograma */
+  .table-wrap{overflow-x:auto;}
+  table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+  .tbl th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);text-align:left;padding:8px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .tbl td{padding:8px 8px;border-bottom:1px solid #EEF0F4;vertical-align:top;}
+  .tbl tr:hover td{background:var(--card-alt);}
+  .tbl td.nowrap{white-space:nowrap;}
+  .tbl input[type=checkbox]{accent-color:var(--accent);}
+
+  /* materiais */
+  .search{width:100%;max-width:340px;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;}
+  .mat-row{display:flex;align-items:flex-start;gap:12px;padding:11px 4px;border-bottom:1px solid #EEF0F4;}
+  .mat-row:last-child{border-bottom:none;}
+  .mat-row .name{font-weight:700;}
+  .mat-row .items{font-size:12.5px;color:var(--text-secondary);margin-top:2px;}
+  .mat-row .items.none{color:var(--warn);font-weight:700;}
+
+  /* modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(15,20,30,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow-y:auto;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--card);border-radius:14px;width:100%;max-width:520px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.25);}
+  .modal.wide{max-width:900px;}
+  .modal h3{margin:0 0 14px;font-size:17px;font-weight:800;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:5px;}
+  .field input[type=text],.field input[type=date],.field input[type=number],.field select,.field textarea{
+    width:100%;padding:9px 10px;font-size:14px;border:1px solid var(--border-strong);border-radius:8px;font-family:inherit;background:#fff;color:var(--text);
+  }
+  .field textarea{resize:vertical;line-height:1.5;}
+  .field .hint{font-size:12px;color:var(--text-secondary);margin-top:5px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+  @media (max-width:560px){ .grid2{grid-template-columns:1fr;} }
+  .seg{display:flex;gap:6px;}
+  .seg button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border-strong);background:#fff;font-weight:700;font-size:12.5px;color:var(--text-secondary);cursor:pointer;}
+  .seg button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .seg button:disabled{opacity:.5;cursor:default;}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:16px;flex-wrap:wrap;}
+  .modal-error{display:none;color:var(--danger);background:var(--danger-soft);border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:6px;}
+  .modal-error.show{display:block;}
+  .preview-box{max-height:380px;overflow:auto;border:1px solid var(--border);border-radius:8px;}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#151A23;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .2s ease;z-index:60;max-width:90vw;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.err{background:var(--danger);}
+
+  .empty-state{text-align:center;padding:40px 20px;color:var(--text-secondary);}
+  .empty-state h3{color:var(--text);margin:0 0 6px;font-size:17px;}
+  .loading{padding:60px;text-align:center;color:var(--text-secondary);}
+
+  /* ----- v2 ----- */
+  .topbar-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .mode-switch{display:flex;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;}
+  .mode-switch button{border:none;background:transparent;padding:6px 11px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--text-secondary);cursor:pointer;}
+  .mode-switch button.active{background:var(--accent);color:#fff;}
+
+  /* status do material: cor do nome da atividade */
+  .tname{cursor:pointer;border-bottom:1px dashed transparent;}
+  .tname:hover{border-bottom-color:currentColor;}
+  .st-solicitado{color:#2563EB !important;}
+  .st-entregue{color:#15803D !important;}
+  .st-atrasado{color:#DC2626 !important;}
+  .st-na{color:var(--text-secondary) !important;}
+  .alert-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:1px 8px;border-radius:9px;margin-top:4px;}
+  .alert-badge.danger{background:var(--danger-soft);color:var(--danger);}
+  .alert-badge.info{background:var(--accent-soft);color:var(--accent);}
+  .flag{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:9px;margin-left:6px;vertical-align:1px;background:#F1F5F9;color:#475569;}
+  .legend-status{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary);margin:0 0 12px;}
+  .legend-status span{display:inline-flex;align-items:center;gap:5px;font-weight:700;}
+  .legend-status i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  /* menu da atividade */
+  .task-menu{position:fixed;z-index:70;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 14px 40px rgba(15,20,30,.22);padding:8px;width:268px;display:none;}
+  .task-menu.show{display:block;}
+  .task-menu .tm-title{font-size:13px;font-weight:800;padding:4px 8px 2px;}
+  .task-menu .tm-sub{font-size:11.5px;color:var(--text-secondary);padding:0 8px 6px;}
+  .task-menu .tm-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text-secondary);padding:8px 8px 3px;}
+  .task-menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:none;background:transparent;padding:7px 8px;border-radius:7px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;}
+  .task-menu button:hover{background:var(--card-alt);}
+  .task-menu button.on{background:var(--accent-soft);}
+  .task-menu .dot{width:11px;height:11px;border-radius:50%;border:2px solid #CBD5E1;flex-shrink:0;}
+  .task-menu .sep{height:1px;background:var(--border);margin:6px 4px;}
+
+  /* linha do tempo da semana */
+  .timeline{display:flex;gap:6px;flex-wrap:wrap;}
+  .tl-step{border:1px solid var(--border);background:var(--card);border-radius:9px;padding:5px 10px;font-size:12px;line-height:1.25;}
+  .tl-step b{display:block;font-size:12.5px;}
+  .tl-step span{color:var(--text-secondary);}
+  .tl-step.past{opacity:.55;}
+  .tl-step.now{border-color:var(--accent);background:var(--accent-soft);}
+  .tl-step.now span{color:var(--accent);font-weight:700;}
+  .quick-weeks{display:flex;gap:6px;flex-wrap:wrap;}
+  .quick-weeks .btn{padding:6px 10px;font-size:12px;}
+  .quick-weeks .btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* conferência */
+  .conf-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .progress-pill{font-size:12px;font-weight:800;padding:3px 10px;border-radius:12px;background:var(--card-alt);border:1px solid var(--border);}
+  .progress-pill.done{background:var(--ok-soft);color:var(--ok);border-color:#A7E3BC;}
+  .check-list{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 14px;}
+  .check-list label{display:flex;align-items:center;gap:8px;font-size:13px;padding:3px 0;cursor:pointer;}
+  .check-list input{accent-color:var(--ok);width:15px;height:15px;margin:0;}
+  .check-list li.ok label span{color:var(--ok);}
+  .check-list li.extra label span::after{content:" (acrescentado)";color:var(--text-secondary);font-size:11px;}
+
+  /* visão geral: calendário de todas as obras */
+  .cal-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0 12px;}
+  .cal-toolbar h3{margin:0;font-size:17px;font-weight:800;}
+  .obra-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary);margin-bottom:10px;}
+  .obra-legend span{display:inline-flex;align-items:center;gap:6px;font-weight:700;}
+  .obra-legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  .chip{display:block;width:100%;font-family:inherit;color:var(--text);border:1px solid var(--border);border-left:4px solid var(--bar);background:var(--card-alt);border-radius:6px;padding:3px 7px;font-size:12px;line-height:1.3;margin-bottom:4px;cursor:pointer;text-align:left;overflow:hidden;}
+  .chip:hover{filter:brightness(.97);}
+  .chip .o{display:block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--text-secondary);}
+  .chip .n{font-weight:700;}
+  .chip .n{display:block;}
+  .chip .s{display:block;font-size:10.5px;color:var(--text-secondary);}
+  .month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card);}
+  .month-grid .dow{background:var(--card-alt);font-size:11px;font-weight:800;color:var(--text-secondary);text-align:center;padding:7px 0;border-bottom:1px solid var(--border);}
+  .month-grid .day{min-height:104px;border-right:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;padding:5px;min-width:0;}
+  .month-grid .day:nth-child(7n){border-right:none;}
+  .month-grid .day.out{background:#FAFBFC;}
+  .month-grid .day.out .num{opacity:.45;}
+  .month-grid .day.today{background:#FFF8E6;}
+  .month-grid .num{font-size:11.5px;font-weight:800;color:var(--text-secondary);margin-bottom:4px;}
+  .month-grid .more{font-size:11px;color:var(--text-secondary);font-weight:700;}
+  .week-rows{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);overflow:hidden;}
+  .week-row{display:grid;grid-template-columns:150px minmax(0,1fr);border-bottom:1px solid var(--border);}
+  .week-row:last-child{border-bottom:none;}
+  .week-row .wl{padding:10px;background:var(--card-alt);border-right:1px solid var(--border);font-size:12.5px;font-weight:800;cursor:pointer;}
+  .week-row .wl span{display:block;font-size:11px;font-weight:600;color:var(--text-secondary);}
+  .week-row.now .wl{background:#FDECC0;}
+  .week-row.target .wl{background:var(--accent);color:#fff;}
+  .week-row.target .wl span{color:#D6E0F2;}
+  .week-row .wc{padding:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 8px;align-content:start;}
+  .week-row .wc .empty{font-size:12px;color:var(--text-secondary);padding:4px;}
+  .days6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card);}
+  .days6 .col{border-right:1px solid #EEF0F4;min-width:0;}
+  .days6 .col:last-child{border-right:none;}
+  .days6 .h{background:var(--card-alt);border-bottom:1px solid var(--border);padding:7px;font-size:12px;font-weight:800;text-align:center;}
+  .days6 .h.today{background:#FDECC0;}
+  .days6 .b{padding:6px;min-height:160px;}
+  .obra-week{border:1px solid var(--border);border-radius:var(--radius);background:var(--card);padding:12px 14px;margin-bottom:10px;border-left-width:5px;}
+  .obra-week h4{margin:0 0 6px;font-size:14px;font-weight:800;}
+  .obra-week .line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:3px 0;font-size:13px;}
+  .obra-week .line .d{font-size:12px;color:var(--text-secondary);}
+  @media (max-width: 760px){
+    .month-grid .day{min-height:70px;padding:3px;}
+    .chip{font-size:10.5px;padding:2px 4px;}
+    .chip .o,.chip .s{display:none;}
+    .days6{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .week-row{grid-template-columns:minmax(0,1fr);}
+    .week-row .wl{border-right:none;border-bottom:1px solid var(--border);}
+  }
+
+  /* calendário em dias */
+  .gantt .dy{width:24px;min-width:24px;text-align:center;border-left:1px solid #F1F3F6;font-size:10px;cursor:default;}
+  .gantt th.dy{height:auto;padding:4px 0;}
+  .gantt th.wkh{font-size:10.5px;text-align:left;padding:4px 6px;border-left:1px solid var(--border-strong);cursor:pointer;}
+  .gantt th.wkh:hover{color:var(--accent);}
+  .gantt .dy.mon{border-left:1px solid var(--border-strong);}
+  .gantt .dy.today{background:#FFF1CC;}
+  .gantt td.dy .bar{height:14px;margin:0 -1px;background:var(--bar);}
+  .gantt td.dy .bar.first{border-top-left-radius:7px;border-bottom-left-radius:7px;margin-left:2px;}
+  .gantt td.dy .bar.last{border-top-right-radius:7px;border-bottom-right-radius:7px;margin-right:2px;}
+  .gantt td .bar.st-bar-solicitado{background:#2563EB;}
+  .gantt td .bar.st-bar-entregue{background:#15803D;}
+  .gantt td .bar.st-bar-atrasado{background:#DC2626;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>Planejamento de Obras</h1>
+      <p id="company-sub">Cronograma · pedidos de material · serviços da semana</p>
+    </div>
+    <div class="topbar-right">
+      <div class="mode-switch" id="mode-switch" title="Como mostrar os prazos">
+        <button type="button" data-mode="resumida">Resumida (semanas)</button>
+        <button type="button" data-mode="completa">Completa (dias)</button>
+      </div>
+      <div class="sync" id="sync"><span class="dot"></span><span id="sync-text">Carregando…</span></div>
+    </div>
+  </div>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main id="content"><div class="loading">Carregando dados…</div></main>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay"><div class="modal" id="modal"></div></div>
+<div class="task-menu" id="task-menu"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+'use strict';
+const APP_VERSION = '2026-11-25-c';
+
+/* ===================================================================
+ * Armazenamento
+ * Firebase Realtime Database (mesmo projeto dos checklists, caminho
+ * próprio) com cópia local no navegador. Sem Firebase, funciona só
+ * neste navegador. Para trocar de projeto Firebase, troque o bloco abaixo.
+ * =================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA6579FEF5g9OnCQKC5qIhs9WwBCPYEdF4",
+  authDomain: "conceito-engenharia-32a42.firebaseapp.com",
+  databaseURL: "https://conceito-engenharia-32a42-default-rtdb.firebaseio.com",
+  projectId: "conceito-engenharia-32a42",
+  storageBucket: "conceito-engenharia-32a42.firebasestorage.app",
+  messagingSenderId: "928147640570",
+  appId: "1:928147640570:web:f3159362b646acbda33943",
+  measurementId: "G-GWQCR8K6SK"
+};
+const FB_PATH = 'planejamento/obras-v1';
+const LOCAL_KEY = 'planejamento-obras-v1';
+
+let fbDb = null;
+let backend = 'local';
+
+function withTimeout(promise, ms, label){
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('Tempo esgotado: ' + label)), ms);
+    promise.then(v => { clearTimeout(t); resolve(v); }, e => { clearTimeout(t); reject(e); });
+  });
+}
+function getFirebaseDb(){
+  if (fbDb) return fbDb;
+  if (!window.firebase || !window.firebase.initializeApp) return null;
+  try{
+    if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    return fbDb;
+  }catch(e){ console.error('Firebase indisponível', e); return null; }
+}
+function readLocal(){
+  try{ const raw = localStorage.getItem(LOCAL_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
+function writeLocal(data){
+  try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); return true; }catch(e){ return false; }
+}
+async function loadRaw(){
+  const db = getFirebaseDb();
+  if (db){
+    try{
+      const snap = await withTimeout(db.ref(FB_PATH).once('value'), 10000, 'ler Firebase');
+      backend = 'firebase';
+      const remote = snap.val();
+      if (remote && (remote.obras || remote.catalog || remote.template || remote.lastUpdated)) return remote;
+      const local = readLocal();
+      return local || remote || {};
+    }catch(e){ console.warn('Firebase falhou, usando o navegador', e); }
+  }
+  backend = 'local';
+  return readLocal() || {};
+}
+async function writeRaw(data){
+  // o Firebase recusa "undefined": o JSON elimina esses campos
+  const clean = JSON.parse(JSON.stringify(data));
+  writeLocal(clean);
+  if (backend === 'firebase' && getFirebaseDb()){
+    await withTimeout(fbDb.ref(FB_PATH).set(clean), 12000, 'salvar Firebase');
+  }
+}
+
+/* ===================================================================
+ * Utilidades
+ * =================================================================== */
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isISO(s){ return typeof s === 'string' && ISO_RE.test(s); }
+function pad(n){ return String(n).padStart(2, '0'); }
+function toISO(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fromISO(s){ const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function addDaysISO(s, n){ const d = fromISO(s); d.setDate(d.getDate() + n); return toISO(d); }
+function diffDays(a, b){ return Math.round((fromISO(b) - fromISO(a)) / 86400000); }
+function mondayOfISO(s){ const d = fromISO(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toISO(d); }
+function todayISO(){ return toISO(new Date()); }
+function fmtDM(s){ if (!isISO(s)) return ''; const [y, m, d] = s.split('-'); return d + '/' + m; }
+function fmtDMY(s){ if (!isISO(s)) return ''; const [y, m, d] = s.split('-'); return d + '/' + m + '/' + y; }
+function weekRangeLabel(mon){ return fmtDM(mon) + ' a ' + fmtDM(addDaysISO(mon, 5)); }
+/**
+ * Semana-alvo padrão (semana dos serviços): a cobrança é feita na segunda da
+ * semana anterior. De segunda a quinta, a cobrança é a desta semana → alvo é a
+ * próxima. De sexta a domingo você já está preparando a próxima segunda → alvo
+ * é a semana seguinte a ela.
+ */
+function defaultTargetMonday(today){
+  today = today || todayISO();
+  const dow = fromISO(today).getDay(); // 0 dom … 6 sáb
+  const mon = mondayOfISO(today);
+  return addDaysISO(mon, (dow >= 1 && dow <= 4) ? 7 : 14);
+}
+function esc(v){
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function normName(s){
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function newId(prefix){ return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function toArr(v){
+  if (Array.isArray(v)) return v.filter(x => x != null);
+  if (v && typeof v === 'object') return Object.keys(v).sort((a, b) => Number(a) - Number(b)).map(k => v[k]).filter(x => x != null);
+  return [];
+}
+function cleanList(arr){
+  const seen = new Set(); const out = [];
+  toArr(arr).forEach(x => { const t = String(x).trim(); const k = normName(t); if (t && !seen.has(k)){ seen.add(k); out.push(t); } });
+  return out;
+}
+
+/* ===================================================================
+ * Importação do cronograma (Excel / CSV / colar do Excel)
+ * Reconhece as colunas pelo cabeçalho (Atividade/Tarefa/Serviço, Início,
+ * Término/Fim, Duração, Etapa/Fase). Sem cabeçalho, deduz pelas datas.
+ * =================================================================== */
+function parseDateCell(v){
+  if (v == null || v === '') return null;
+  if (Object.prototype.toString.call(v) === '[object Date]') return isNaN(v) ? null : toISO(v);
+  if (typeof v === 'number'){
+    if (v > 20000 && v < 80000){
+      // tolera frações de segundos antes da meia-noite (arredondamento de alguns exportadores)
+      const d = new Date(Math.round((Math.floor(v + 1 / 1440) - 25569) * 86400000));
+      return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+    }
+    return null;
+  }
+  const s = String(v).trim();
+  let m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return validYMD(+m[1], +m[2], +m[3]);
+  m = s.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
+  if (m){ let y = +m[3]; if (y < 100) y += 2000; return validYMD(y, +m[2], +m[1]); }
+  return null;
+}
+function validYMD(y, m, d){
+  if (y < 2000 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+  const dt = new Date(y, m - 1, d);
+  if (dt.getMonth() !== m - 1) return null;
+  return toISO(dt);
+}
+/** Duração em DIAS. Aceita "5", "5 dias", "5d" e também semanas: "2 semanas", "2 sem", "2s". */
+function parseDuration(v){
+  if (typeof v === 'number' && v > 0 && v < 1000) return Math.round(v);
+  const str = normName(v);
+  const m = str.match(/(\d+(?:[.,]\d+)?)/) || String(v || '').match(/(\d+(?:[.,]\d+)?)/);
+  if (!m) return null;
+  let n = parseFloat(m[1].replace(',', '.'));
+  if (/\d\s*(sem|semana|semanas|s|w|wk|weeks?)\b/.test(str)) n = n * 7;
+  n = Math.round(n);
+  return n > 0 && n < 1000 ? n : null;
+}
+const HEADER_PATTERNS = {
+  text: /atividade|tarefa|servico|descricao|^nome|discriminacao/,
+  start: /inicio|data inicial|comeco|start|previsao de inicio|dt inicio/,
+  end: /termino|fim|conclusao|final|finish|entrega|previsao de termino|dt fim/,
+  dur: /duracao|dias|prazo/,
+  etapa: /etapa|fase|grupo|disciplina|frente|categoria/
+};
+function detectHeader(rows){
+  for (let i = 0; i < Math.min(rows.length, 25); i++){
+    const cells = (rows[i] || []).map(c => normName(c));
+    const map = {};
+    cells.forEach((c, j) => {
+      if (!c) return;
+      if (map.start == null && HEADER_PATTERNS.start.test(c)) { map.start = j; return; }
+      if (map.end == null && HEADER_PATTERNS.end.test(c)) { map.end = j; return; }
+      if (map.dur == null && HEADER_PATTERNS.dur.test(c)) { map.dur = j; return; }
+      if (map.text == null && HEADER_PATTERNS.text.test(c)) { map.text = j; return; }
+      if (map.etapa == null && HEADER_PATTERNS.etapa.test(c)) { map.etapa = j; return; }
+    });
+    if (map.text != null && map.start != null) return { row: i, map };
+  }
+  return null;
+}
+function guessColumns(rows){
+  const n = Math.max(0, ...rows.slice(0, 80).map(r => (r || []).length));
+  const dateHits = [], textLen = [];
+  for (let j = 0; j < n; j++){
+    let dh = 0, tl = 0, tc = 0;
+    rows.slice(0, 80).forEach(r => {
+      const v = (r || [])[j];
+      if (v === '' || v == null) return;
+      if (parseDateCell(v)) dh++;
+      else if (typeof v === 'string' && /[a-zA-ZÀ-ú]/.test(v)) { tl += v.length; tc++; }
+    });
+    dateHits.push(dh); textLen.push(tc ? tl / tc * Math.min(1, tc / 3) : 0);
+  }
+  const dateCols = dateHits.map((h, j) => ({ h, j })).filter(x => x.h >= 2).sort((a, b) => b.h - a.h).slice(0, 2).map(x => x.j).sort((a, b) => a - b);
+  if (!dateCols.length) return null;
+  let text = -1, best = 0;
+  textLen.forEach((l, j) => { if (!dateCols.includes(j) && l > best){ best = l; text = j; } });
+  if (text < 0) return null;
+  return { row: -1, map: { text, start: dateCols[0], end: dateCols[1] } };
+}
+function parseScheduleRows(rows){
+  rows = (rows || []).map(r => Array.isArray(r) ? r : []);
+  const det = detectHeader(rows) || guessColumns(rows);
+  if (!det) return { items: [], mapping: null, skipped: rows.length };
+  const { map } = det;
+  const items = [];
+  let etapa = '', skipped = 0;
+  for (let i = det.row + 1; i < rows.length; i++){
+    const r = rows[i];
+    const text = String(r[map.text] == null ? '' : r[map.text]).replace(/\s+/g, ' ').trim();
+    const rowEtapa = map.etapa != null ? String(r[map.etapa] || '').trim() : '';
+    const start = parseDateCell(r[map.start]);
+    let end = map.end != null ? parseDateCell(r[map.end]) : null;
+    if (!text){ if (r.some(c => String(c).trim())) skipped++; continue; }
+    if (!start){
+      // linha só com texto (sem datas): título de etapa/grupo
+      if (r.filter(c => String(c).trim()).length <= 2 && !parseDateCell(r[map.end])) etapa = text;
+      else skipped++;
+      continue;
+    }
+    if (!end && map.dur != null){ const d = parseDuration(r[map.dur]); if (d) end = addDaysISO(start, d - 1); }
+    if (!end || end < start) end = start;
+    items.push({ etapa: rowEtapa || etapa, text, start, end });
+  }
+  return { items, mapping: map, skipped };
+}
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('Falha ao carregar ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function ensureXLSX(){
+  if (window.XLSX) return window.XLSX;
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+  return window.XLSX;
+}
+async function readWorkbookFile(file){
+  const XLSX = await ensureXLSX();
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  return wb.SheetNames.map(name => {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: '' });
+    return { name, result: parseScheduleRows(rows) };
+  });
+}
+function parsePasted(text){
+  const rows = String(text || '').split(/\r?\n/).filter(l => l.trim()).map(l => l.split('\t').map(c => c.trim()));
+  const res = parseScheduleRows(rows);
+  if (res.items.length) return res;
+  // sem cabeçalho e poucas linhas: atividade | início | término
+  return parseScheduleRows([['Atividade', 'Início', 'Término']].concat(rows));
+}
+
+/* ===================================================================
+ * Interface — base
+ * =================================================================== */
+function toast(msg, isErr){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), isErr ? 5000 : 2600);
+}
+function openModal(html, wide){
+  const m = document.getElementById('modal');
+  m.className = 'modal' + (wide ? ' wide' : '');
+  m.innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('show');
+  const first = m.querySelector('input[type=text], textarea, input[type=date]');
+  if (first) setTimeout(() => first.focus(), 30);
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('show'); }
+function modalOpen(){ return document.getElementById('modal-overlay').classList.contains('show'); }
+document.getElementById('modal-overlay').addEventListener('mousedown', e => { if (e.target.id === 'modal-overlay') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalOpen()) closeModal(); });
+function showError(id, msg){ const el = document.getElementById(id); if (el){ el.textContent = msg; el.classList.add('show'); } }
+function $(id){ return document.getElementById(id); }
+
+function renderSync(){
+  const el = $('sync');
+  el.className = 'sync ' + (backend === 'firebase' ? 'ok' : 'local');
+  const when = state && state.lastUpdated ? new Date(state.lastUpdated).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+  $('sync-text').textContent = (backend === 'firebase' ? 'Sincronizado na nuvem' : 'Salvo só neste navegador') + (when ? ' · ' + when : '');
+}
+/* ===================================================================
+ * Prazos do pedido de material
+ * Para uma semana de serviço que começa na segunda S:
+ *   prévia ao mestre ........ segunda S−14
+ *   lista final + pedido .... segunda S−7  (pedidos só seg/qua; compras tem 5 dias úteis)
+ *   material na obra ........ sexta  S−3  (limite ideal)
+ *   início dos serviços ..... segunda S
+ * =================================================================== */
+function weekDeadlines(mon){
+  return {
+    previa: addDaysISO(mon, -14),
+    pedido: addDaysISO(mon, -7),
+    chegada: addDaysISO(mon, -3),
+    inicio: mon
+  };
+}
+function taskDeadlines(t){ return weekDeadlines(mondayOfISO(t.start)); }
+
+const MAT = {
+  '': { label: 'Sem status', color: '#CBD5E1' },
+  solicitado: { label: 'Material solicitado', color: '#2563EB' },
+  entregue: { label: 'Material entregue', color: '#15803D' },
+  atrasado: { label: 'Material atrasado', color: '#DC2626' },
+  na: { label: 'Não precisa de material', color: '#94A3B8' }
+};
+function statusClass(t){ return t.mat ? ' st-' + t.mat : ''; }
+
+/**
+ * Aviso automático pela data de hoje (só na tela, não vai para o mestre):
+ * pedido não confirmado depois da segunda do pedido, ou material que não
+ * chegou até a sexta anterior ao início.
+ */
+function taskAlert(t, today){
+  today = today || todayISO();
+  if (t.end < today || t.mat === 'entregue' || t.mat === 'na' || t.mat === 'atrasado') return null;
+  const dl = taskDeadlines(t);
+  if (today > dl.chegada) return { level: 'danger', text: `Material não confirmado na obra (até sex ${fmtDM(dl.chegada)})` };
+  if (!t.mat && today > dl.pedido) return { level: 'danger', text: `Pedido não confirmado (prazo seg ${fmtDM(dl.pedido)})` };
+  if (!t.mat && diffDays(today, dl.pedido) <= 14) return { level: 'info', text: today === dl.pedido ? 'Pedir material hoje' : `Pedir material até seg ${fmtDM(dl.pedido)}` };
+  if (t.mat === 'solicitado' && diffDays(today, dl.chegada) <= 7) return { level: 'info', text: `Deve chegar até sex ${fmtDM(dl.chegada)}` };
+  return null;
+}
+function alertHtml(t){
+  const a = taskAlert(t);
+  return a ? `<span class="alert-badge ${a.level} no-capture">${a.level === 'danger' ? '⚠ ' : ''}${esc(a.text)}</span>` : '';
+}
+
+/* ---------- visão resumida (semanas) x completa (dias) ---------- */
+const MODE_KEY = 'planejamento-modo';
+let viewMode = (() => { try{ return localStorage.getItem(MODE_KEY) === 'completa' ? 'completa' : 'resumida'; }catch(e){ return 'resumida'; } })();
+function setViewMode(m){ viewMode = m; try{ localStorage.setItem(MODE_KEY, m); }catch(e){} render(); }
+function weeksSpan(t){ return diffDays(mondayOfISO(t.start), mondayOfISO(t.end)) / 7 + 1; }
+function fmtTaskDates(t){
+  if (viewMode === 'resumida'){
+    const n = weeksSpan(t);
+    const a = mondayOfISO(t.start);
+    return n === 1 ? `Semana de ${fmtDM(a)}` : `Semanas de ${fmtDM(a)} a ${fmtDM(mondayOfISO(t.end))} · ${n} semanas`;
+  }
+  const d = diffDays(t.start, t.end) + 1;
+  return t.start === t.end ? `${fmtDM(t.start)} · 1 dia` : `${fmtDM(t.start)} → ${fmtDM(t.end)} · ${d} dias`;
+}
+function flagsHtml(t){
+  return (t.postponed ? `<span class="flag" title="Adiada ${t.postponed} vez(es)">Adiada ${t.postponed}×</span>` : '') +
+    (t.extended ? `<span class="flag" title="Prazo aumentado em ${t.extended} semana(s)">+${t.extended} sem</span>` : '');
+}
+
+/* ===================================================================
+ * Estado
+ * obras[id] = { name, archived, createdAt, tasks[tid], weeks[segunda]{previa,enviado,equipe,conferido} }
+ * tasks[tid] = { text, etapa, start, end, order, mat, postponed, extended, extras[], removed[], ordered[] }
+ * catalog[cid] = { name, items[] } — materiais estimados por atividade
+ * =================================================================== */
+let state = null;
+const view = {
+  section: 'geral', obraId: null, tab: 'envio', target: defaultTargetMonday(), catFilter: '',
+  calMode: 'mes', calWeek: mondayOfISO(todayISO()), calMonth: todayISO().slice(0, 7)
+};
+
+function normalizeTask(t){
+  if (!t || !String(t.text || '').trim() || !isISO(t.start)) return null;
+  return {
+    text: String(t.text).trim(), etapa: String(t.etapa || '').trim(),
+    start: t.start, end: (isISO(t.end) && t.end >= t.start) ? t.end : t.start,
+    order: Number(t.order) || 0,
+    mat: Object.prototype.hasOwnProperty.call(MAT, t.mat || '') ? (t.mat || '') : '',
+    postponed: Math.max(0, Math.round(Number(t.postponed) || 0)),
+    extended: Math.max(0, Math.round(Number(t.extended) || 0)),
+    extras: cleanList(t.extras), removed: cleanList(t.removed), ordered: cleanList(t.ordered)
+  };
+}
+function normalizeState(raw){
+  raw = raw || {};
+  const s = {
+    appVersion: APP_VERSION, lastUpdated: raw.lastUpdated || '',
+    settings: { company: String((raw.settings && raw.settings.company) || '') },
+    obras: {}, catalog: {}
+  };
+  Object.keys(raw.obras || {}).forEach(id => {
+    const o = raw.obras[id];
+    if (!o || !o.name) return;
+    const tasks = {};
+    Object.keys(o.tasks || {}).forEach(tid => { const t = normalizeTask(o.tasks[tid]); if (t) tasks[tid] = t; });
+    const weeks = {};
+    Object.keys(o.weeks || {}).forEach(wk => {
+      const w = o.weeks[wk];
+      if (!isISO(wk) || !w) return;
+      // versão anterior guardava os ajustes de material por semana: passam para a atividade
+      Object.keys(w.extras || {}).forEach(tid => { if (tasks[tid]) tasks[tid].extras = cleanList(tasks[tid].extras.concat(toArr(w.extras[tid]))); });
+      Object.keys(w.removed || {}).forEach(tid => { if (tasks[tid]) tasks[tid].removed = cleanList(tasks[tid].removed.concat(toArr(w.removed[tid]))); });
+      const wd = { previa: !!w.previa, enviado: !!w.enviado, equipe: !!w.equipe, conferido: !!w.conferido };
+      if (wd.previa || wd.enviado || wd.equipe || wd.conferido) weeks[wk] = wd;
+    });
+    s.obras[id] = { name: String(o.name), archived: !!o.archived, createdAt: o.createdAt || '', tasks, weeks };
+  });
+  Object.keys(raw.catalog || {}).forEach(cid => {
+    const c = raw.catalog[cid];
+    if (!c || !String(c.name || '').trim()) return;
+    const items = cleanList(c.items);
+    if (items.length) s.catalog[cid] = { name: String(c.name).trim(), items };
+  });
+  return s;
+}
+
+async function save(){
+  state.lastUpdated = new Date().toISOString();
+  state.appVersion = APP_VERSION;
+  try{
+    await writeRaw(state);
+    renderSync();
+    return true;
+  }catch(e){
+    console.error(e);
+    toast('Não foi possível salvar na nuvem agora. Ficou salvo neste navegador; tente de novo em instantes.', true);
+    return false;
+  }
+}
+
+/* ---------- obras e atividades ---------- */
+function allObraIds(){ return Object.keys(state.obras).sort((a, b) => (state.obras[a].createdAt || '').localeCompare(state.obras[b].createdAt || '') || a.localeCompare(b)); }
+function activeObras(){ return Object.keys(state.obras).filter(id => !state.obras[id].archived).sort((a, b) => state.obras[a].name.localeCompare(state.obras[b].name, 'pt-BR')); }
+function archivedObras(){ return Object.keys(state.obras).filter(id => state.obras[id].archived).sort((a, b) => state.obras[a].name.localeCompare(state.obras[b].name, 'pt-BR')); }
+const OBRA_COLORS = ['#2F5BA8', '#0E8A7E', '#B4561A', '#7C3AED', '#C0336E', '#4D7C0F', '#0E7490', '#A16207', '#475569', '#9F1239'];
+function obraColor(id){ const i = allObraIds().indexOf(id); return OBRA_COLORS[(i < 0 ? 0 : i) % OBRA_COLORS.length]; }
+function sortedTasks(obra){
+  return Object.keys(obra.tasks).map(tid => Object.assign({ id: tid }, obra.tasks[tid]))
+    .sort((a, b) => a.start.localeCompare(b.start) || a.order - b.order || a.text.localeCompare(b.text, 'pt-BR'));
+}
+function nextOrder(obra){ return Object.values(obra.tasks).reduce((m, t) => Math.max(m, t.order), 0) + 1; }
+function addTask(obra, t){
+  const id = newId('t');
+  obra.tasks[id] = normalizeTask({ text: t.text, etapa: t.etapa, start: t.start, end: t.end, order: t.order != null ? t.order : nextOrder(obra) });
+  return id;
+}
+function weekData(obra, wk){
+  if (!obra.weeks[wk]) obra.weeks[wk] = { previa: false, enviado: false, equipe: false, conferido: false };
+  return obra.weeks[wk];
+}
+function overlaps(t, from, to){ return t.start <= to && t.end >= from; }
+/** Atividades da semana (seg a dom): as que iniciam nela e as que continuam de antes. */
+function tasksInWeek(obra, mon){
+  const sun = addDaysISO(mon, 6);
+  const list = sortedTasks(obra).filter(t => overlaps(t, mon, sun));
+  return { starting: list.filter(t => t.start >= mon), continuing: list.filter(t => t.start < mon) };
+}
+/** Adiar = a atividade inteira vai para a semana seguinte. */
+function postponeTask(t){ t.start = addDaysISO(t.start, 7); t.end = addDaysISO(t.end, 7); t.postponed = (t.postponed || 0) + 1; }
+function undoPostpone(t){ if (!t.postponed) return; t.start = addDaysISO(t.start, -7); t.end = addDaysISO(t.end, -7); t.postponed--; }
+/** Atrasada = continua mais uma semana (o término anda 7 dias). */
+function extendTask(t){ t.end = addDaysISO(t.end, 7); t.extended = (t.extended || 0) + 1; }
+function undoExtend(t){ if (!t.extended) return; const e = addDaysISO(t.end, -7); t.end = e < t.start ? t.start : e; t.extended--; }
+
+/* ---------- materiais ---------- */
+function findCatalog(text){
+  const k = normName(text);
+  const cid = Object.keys(state.catalog).find(id => normName(state.catalog[id].name) === k);
+  return cid ? { id: cid, entry: state.catalog[cid] } : null;
+}
+function catalogItems(text){ const f = findCatalog(text); return f ? f.entry.items.slice() : []; }
+function setCatalogItems(text, items){
+  const clean = cleanList(items);
+  const f = findCatalog(text);
+  if (!clean.length){ if (f) delete state.catalog[f.id]; return; }
+  if (f) f.entry.items = clean;
+  else state.catalog[newId('c')] = { name: text.trim(), items: clean };
+}
+/** Materiais desta atividade nesta obra: lista padrão − retirados + acrescentados. */
+function taskMaterials(t){
+  const removedSet = new Set((t.removed || []).map(normName));
+  const base = catalogItems(t.text);
+  const extras = (t.extras || []).filter(x => !base.some(b => normName(b) === normName(x)));
+  return {
+    active: base.filter(i => !removedSet.has(normName(i))).map(i => ({ text: i, extra: false }))
+      .concat(extras.map(i => ({ text: i, extra: true }))),
+    removed: base.filter(i => removedSet.has(normName(i)))
+  };
+}
+function allActivityNames(){
+  const map = new Map();
+  const add = (n) => { const k = normName(n); if (k && !map.has(k)) map.set(k, n); };
+  Object.values(state.catalog).forEach(c => add(c.name));
+  Object.values(state.obras).forEach(o => Object.values(o.tasks).forEach(t => add(t.text)));
+  return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+function renderHeader(){
+  $('company-sub').textContent = state.settings.company
+    ? state.settings.company + ' · cronograma, pedidos de material e serviços da semana'
+    : 'Cronograma · pedidos de material · serviços da semana';
+  const sw = $('mode-switch');
+  sw.querySelectorAll('button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === viewMode);
+    b.onclick = () => setViewMode(b.dataset.mode);
+  });
+}
+
+function render(){
+  if (!state) return;
+  closeTaskMenu();
+  if (view.section === 'obra' && (!view.obraId || !state.obras[view.obraId])) { view.section = 'geral'; view.obraId = null; }
+  renderHeader();
+  renderNav();
+  const c = $('content');
+  c.innerHTML = '';
+  if (view.section === 'geral') renderOverview(c);
+  else if (view.section === 'obra') renderObra(c);
+  else if (view.section === 'materiais') renderCatalog(c);
+  else if (view.section === 'config') renderSettings(c);
+  renderSync();
+}
+
+function renderNav(){
+  const nav = $('sidebar');
+  const act = activeObras(), arch = archivedObras();
+  const btn = (label, badge, active, onclick, color) => {
+    const b = document.createElement('button');
+    b.className = 'nav-btn' + (active ? ' active' : '');
+    b.innerHTML = `<span>${color ? `<i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${color};margin-right:7px;"></i>` : ''}${esc(label)}</span>` + (badge != null ? `<span class="badge">${esc(badge)}</span>` : '');
+    b.onclick = onclick;
+    return b;
+  };
+  nav.innerHTML = '';
+  nav.appendChild(btn('📋 Visão geral', null, view.section === 'geral', () => { view.section = 'geral'; render(); }));
+  const lbl = document.createElement('div'); lbl.className = 'nav-label'; lbl.textContent = 'Obras'; nav.appendChild(lbl);
+  if (!act.length){ const e = document.createElement('div'); e.className = 'nav-empty'; e.textContent = 'Nenhuma obra cadastrada.'; nav.appendChild(e); }
+  act.forEach(id => {
+    const o = state.obras[id];
+    const alerts = Object.values(o.tasks).filter(t => { const a = taskAlert(t); return a && a.level === 'danger'; }).length;
+    nav.appendChild(btn(o.name, alerts ? '⚠ ' + alerts : null, view.section === 'obra' && view.obraId === id,
+      () => { view.section = 'obra'; view.obraId = id; if (!['envio', 'conferencia', 'calendario', 'cronograma'].includes(view.tab)) view.tab = 'envio'; render(); }, obraColor(id)));
+  });
+  const add = document.createElement('button'); add.className = 'nav-add'; add.textContent = '+ Nova obra'; add.onclick = showNewObraModal; nav.appendChild(add);
+  if (arch.length){
+    const l2 = document.createElement('div'); l2.className = 'nav-label'; l2.textContent = 'Arquivadas'; nav.appendChild(l2);
+    arch.forEach(id => nav.appendChild(btn(state.obras[id].name, null, view.section === 'obra' && view.obraId === id, () => { view.section = 'obra'; view.obraId = id; view.tab = 'cronograma'; render(); })));
+  }
+  const sep = document.createElement('div'); sep.className = 'nav-sep'; nav.appendChild(sep);
+  const semMat = allActivityNames().filter(n => !catalogItems(n).length).length;
+  nav.appendChild(btn('🧱 Materiais por atividade', semMat ? semMat + ' sem lista' : null, view.section === 'materiais', () => { view.section = 'materiais'; render(); }));
+  nav.appendChild(btn('⚙ Configurações', null, view.section === 'config', () => { view.section = 'config'; render(); }));
+}
+
+function legendStatusHtml(){
+  return `<div class="legend-status no-capture">Clique no nome da atividade para marcar:
+    ${['solicitado', 'entregue', 'atrasado'].map(k => `<span style="color:${MAT[k].color}"><i style="background:${MAT[k].color}"></i>${MAT[k].label}</span>`).join('')}</div>`;
+}
+function taskNameHtml(obraId, t, extraCls){
+  return `<span class="tname${statusClass(t)}${extraCls ? ' ' + extraCls : ''}" data-o="${obraId}" data-t="${t.id}" title="Clique para marcar o material ou mudar o prazo">${esc(t.text)}</span>`;
+}
+function bindTaskNames(root){
+  root.querySelectorAll('[data-o][data-t]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); openTaskMenu(el, el.dataset.o, el.dataset.t); });
+  });
+}
+
+/* ===================================================================
+ * Menu da atividade (clique no nome): status do material e prazo
+ * =================================================================== */
+function closeTaskMenu(){ const m = $('task-menu'); if (m) m.classList.remove('show'); }
+function openTaskMenu(anchor, obraId, tid){
+  const o = state.obras[obraId];
+  const t = o && o.tasks[tid];
+  if (!t) return;
+  const tt = Object.assign({ id: tid }, t);
+  const dl = taskDeadlines(t);
+  const m = $('task-menu');
+  m.innerHTML = `
+    <div class="tm-title">${esc(t.text)}</div>
+    <div class="tm-sub">${esc(o.name)} · ${esc(fmtTaskDates(tt))}</div>
+    <div class="tm-label">Material</div>
+    ${['solicitado', 'entregue', 'atrasado', 'na', ''].map(k => `<button type="button" data-mat="${k}" class="${(t.mat || '') === k ? 'on' : ''}">
+      <span class="dot" style="background:${k && k !== 'na' ? MAT[k].color : '#fff'};border-color:${MAT[k].color}"></span>${MAT[k].label}</button>`).join('')}
+    <div class="tm-sub" style="padding-top:4px;">Pedido até seg ${fmtDM(dl.pedido)} · na obra até sex ${fmtDM(dl.chegada)}</div>
+    <div class="sep"></div>
+    <div class="tm-label">Prazo</div>
+    <button type="button" data-act="adiar">⏭ Adiar para a semana seguinte</button>
+    <button type="button" data-act="estender">⏳ Atrasada: mais 1 semana</button>
+    ${t.postponed ? '<button type="button" data-act="undo-adiar">↩ Desfazer adiamento</button>' : ''}
+    ${t.extended ? '<button type="button" data-act="undo-estender">↩ Tirar a semana a mais</button>' : ''}
+    <div class="sep"></div>
+    <button type="button" data-act="editar">✎ Editar atividade</button>`;
+  m.querySelectorAll('[data-mat]').forEach(b => b.onclick = async () => {
+    t.mat = b.dataset.mat; closeTaskMenu(); await save(); render();
+  });
+  m.querySelectorAll('[data-act]').forEach(b => b.onclick = async () => {
+    const a = b.dataset.act;
+    closeTaskMenu();
+    if (a === 'editar'){ showTaskModal(obraId, tid); return; }
+    if (a === 'adiar') postponeTask(t);
+    if (a === 'estender') extendTask(t);
+    if (a === 'undo-adiar') undoPostpone(t);
+    if (a === 'undo-estender') undoExtend(t);
+    if (await save()){
+      if (a === 'adiar') toast(`Adiada: agora começa na semana de ${fmtDM(mondayOfISO(t.start))}.`);
+      if (a === 'estender') toast(`Prazo aumentado: termina na semana de ${fmtDM(mondayOfISO(t.end))}.`);
+    }
+    render();
+  });
+  m.classList.add('show');
+  const r = anchor.getBoundingClientRect();
+  const w = m.offsetWidth, h = m.offsetHeight;
+  let left = Math.min(r.left, window.innerWidth - w - 10);
+  let top = r.bottom + 6;
+  if (top + h > window.innerHeight - 10) top = Math.max(10, r.top - h - 6);
+  m.style.left = Math.max(10, left) + 'px';
+  m.style.top = top + 'px';
+}
+document.addEventListener('mousedown', e => { const m = $('task-menu'); if (m && m.classList.contains('show') && !m.contains(e.target) && !e.target.closest('[data-t]')) closeTaskMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTaskMenu(); });
+window.addEventListener('scroll', closeTaskMenu, true);
+window.addEventListener('resize', closeTaskMenu);
+
+/* ===================================================================
+ * Barra da semana: navegação + linha do tempo do pedido
+ * =================================================================== */
+function weekBar(container){
+  const P = defaultTargetMonday();
+  const dl = weekDeadlines(view.target);
+  const today = todayISO();
+  const steps = [
+    ['Prévia ao mestre', 'seg ' + fmtDM(dl.previa), dl.previa],
+    ['Lista final + pedido', 'até seg ' + fmtDM(dl.pedido), dl.pedido],
+    ['Material na obra', 'até sex ' + fmtDM(dl.chegada), dl.chegada],
+    ['Início dos serviços', 'seg ' + fmtDM(dl.inicio), dl.inicio]
+  ];
+  const nextIdx = steps.findIndex(s => s[2] >= today);
+  const wrap = document.createElement('div');
+  wrap.style.marginBottom = '14px';
+  wrap.innerHTML = `
+    <div class="week-bar" style="margin-bottom:10px;">
+      <div class="week-nav">
+        <button type="button" data-d="-7" title="Semana anterior">◀</button>
+        <div class="label">Semana ${esc(weekRangeLabel(view.target))}</div>
+        <button type="button" data-d="7" title="Próxima semana">▶</button>
+      </div>
+      <div class="quick-weeks">
+        <button type="button" class="btn${view.target === P ? ' on' : ''}" data-q="${P}">Pedido desta segunda · ${fmtDM(P)}</button>
+        <button type="button" class="btn${view.target === addDaysISO(P, 7) ? ' on' : ''}" data-q="${addDaysISO(P, 7)}">Prévia · ${fmtDM(addDaysISO(P, 7))}</button>
+      </div>
+    </div>
+    <div class="timeline">${steps.map((s, i) => `<div class="tl-step${s[2] < today ? ' past' : ''}${i === nextIdx ? ' now' : ''}"><b>${s[0]}</b><span>${s[1]}${s[2] === today ? ' · hoje' : ''}</span></div>`).join('')}</div>`;
+  wrap.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { view.target = addDaysISO(view.target, Number(b.dataset.d)); render(); });
+  wrap.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { view.target = b.dataset.q; render(); });
+  container.appendChild(wrap);
+}
+
+/* ===================================================================
+ * Visão geral: pedidos da semana + calendário de todas as obras
+ * =================================================================== */
+function renderOverview(c){
+  c.insertAdjacentHTML('beforeend', `<div class="page-head"><div><h2>Visão geral</h2>
+    <div class="sub">Pedidos de material da semana escolhida e o calendário de todas as obras.</div></div></div>`);
+  const ids = activeObras();
+  if (!ids.length){
+    c.insertAdjacentHTML('beforeend', `<div class="card empty-state"><h3>Cadastre a primeira obra</h3>
+      <p>Crie a obra e importe o cronograma (Excel): o calendário e as listas de serviços se montam sozinhos.</p>
+      <button class="btn primary" id="ov-new">+ Nova obra</button></div>`);
+    $('ov-new').onclick = showNewObraModal;
+    return;
+  }
+  weekBar(c);
+  c.insertAdjacentHTML('beforeend', legendStatusHtml());
+  const grid = document.createElement('div');
+  grid.className = 'overview-grid';
+  ids.forEach(id => {
+    const o = state.obras[id];
+    const { starting, continuing } = tasksInWeek(o, view.target);
+    const w = o.weeks[view.target] || {};
+    const card = document.createElement('div');
+    card.className = 'ov-card';
+    card.style.borderTop = `4px solid ${obraColor(id)}`;
+    const chip = (on, label) => `<span class="status-chip${on ? ' on' : ''}">${on ? '✓' : '○'} ${label}</span>`;
+    const pend = starting.filter(t => !t.mat).length;
+    card.innerHTML = `
+      <h3>${esc(o.name)}</h3>
+      <div class="ov-count">${starting.length ? `${starting.length} iniciam${pend ? ` · <b style="color:var(--danger)">${pend} sem pedido confirmado</b>` : ' · todos com status'}` : 'Nenhuma atividade inicia nesta semana'}${continuing.length ? ` · ${continuing.length} continuam` : ''}</div>
+      ${starting.length ? `<ul class="ov-list">${starting.map(t => `<li>${taskNameHtml(id, t)}${flagsHtml(t)}</li>`).join('')}</ul>` : ''}
+      <div class="row">${chip(w.previa, 'Prévia')}${chip(w.enviado, 'Lista final')}${chip(w.conferido, 'Pedido conferido')}</div>
+      <div><button class="btn" type="button">Abrir obra</button></div>`;
+    card.querySelector('.btn').onclick = () => { view.section = 'obra'; view.obraId = id; view.tab = 'conferencia'; render(); };
+    bindTaskNames(card);
+    grid.appendChild(card);
+  });
+  c.appendChild(grid);
+  renderAllObrasCalendar(c, ids);
+}
+
+const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const DOW = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+function monthLabel(ym){ const [y, m] = ym.split('-').map(Number); const n = MONTHS[m - 1]; return n.charAt(0).toUpperCase() + n.slice(1) + ' de ' + y; }
+function addMonths(ym, n){ const [y, m] = ym.split('-').map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+
+function allTasksOf(ids){
+  const out = [];
+  ids.forEach(id => sortedTasks(state.obras[id]).forEach(t => out.push(Object.assign({ obraId: id }, t))));
+  return out;
+}
+function chipHtml(t, sub){
+  return `<button type="button" class="chip" data-o="${t.obraId}" data-t="${t.id}" style="border-left-color:${obraColor(t.obraId)}">
+    <span class="o">${esc(state.obras[t.obraId].name)}</span><span class="n${statusClass(t)}">${esc(t.text)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ''}</button>`;
+}
+
+function renderAllObrasCalendar(c, ids){
+  const bar = document.createElement('div');
+  bar.className = 'cal-toolbar';
+  const isMes = view.calMode === 'mes';
+  const label = isMes ? monthLabel(view.calMonth) : 'Semana ' + weekRangeLabel(view.calWeek);
+  bar.innerHTML = `<h3>Calendário de todas as obras</h3><span class="spacer"></span>
+    <div class="mode-switch"><button type="button" data-m="mes" class="${isMes ? 'active' : ''}">Mês</button><button type="button" data-m="semana" class="${isMes ? '' : 'active'}">Semana</button></div>
+    <div class="week-nav"><button type="button" data-n="-1">◀</button><div class="label">${esc(label)}</div><button type="button" data-n="1">▶</button></div>
+    <button type="button" class="btn ghost" data-today="1">Hoje</button>`;
+  bar.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { view.calMode = b.dataset.m; render(); });
+  bar.querySelectorAll('[data-n]').forEach(b => b.onclick = () => {
+    const n = Number(b.dataset.n);
+    if (view.calMode === 'mes') view.calMonth = addMonths(view.calMonth, n);
+    else view.calWeek = addDaysISO(view.calWeek, 7 * n);
+    render();
+  });
+  bar.querySelector('[data-today]').onclick = () => { view.calMonth = todayISO().slice(0, 7); view.calWeek = mondayOfISO(todayISO()); render(); };
+  c.appendChild(bar);
+  c.insertAdjacentHTML('beforeend', `<div class="obra-legend">${ids.map(id => `<span><i style="background:${obraColor(id)}"></i>${esc(state.obras[id].name)}</span>`).join('')}</div>`);
+
+  const tasks = allTasksOf(ids);
+  const today = todayISO();
+  const holder = document.createElement('div');
+  if (isMes){
+    const first = view.calMonth + '-01';
+    const lastDay = toISO(new Date(Number(view.calMonth.slice(0, 4)), Number(view.calMonth.slice(5, 7)), 0));
+    const gridStart = mondayOfISO(first);
+    const gridEnd = addDaysISO(mondayOfISO(lastDay), 6);
+    if (viewMode === 'resumida'){
+      // uma linha por semana do mês, com as atividades de todas as obras
+      let html = '<div class="week-rows">';
+      for (let wk = gridStart; wk <= gridEnd; wk = addDaysISO(wk, 7)){
+        // só semanas com algum dia útil (seg a sáb) dentro do mês
+        if (addDaysISO(wk, 5) < first || wk > lastDay) continue;
+        const sun = addDaysISO(wk, 6);
+        const list = tasks.filter(t => overlaps(t, wk, sun));
+        const cls = (wk === mondayOfISO(today) ? ' now' : '') + (wk === view.target ? ' target' : '');
+        html += `<div class="week-row${cls}"><div class="wl" data-wk="${wk}" title="Ver esta semana">Semana ${fmtDM(wk)}<span>${weekRangeLabel(wk)}${wk === mondayOfISO(today) ? ' · atual' : ''}</span></div><div class="wc">` +
+          (list.length ? list.map(t => chipHtml(t, t.start >= wk ? 'Inicia' : 'Continua')).join('') : '<div class="empty">Nenhuma atividade</div>') + '</div></div>';
+      }
+      holder.innerHTML = html + '</div>';
+      holder.querySelectorAll('[data-wk]').forEach(el => el.onclick = () => { view.calMode = 'semana'; view.calWeek = el.dataset.wk; render(); });
+    } else {
+      let html = '<div class="month-grid">' + DOW.map(d => `<div class="dow">${d}</div>`).join('');
+      for (let d = gridStart; d <= gridEnd; d = addDaysISO(d, 1)){
+        const list = tasks.filter(t => t.start <= d && t.end >= d);
+        const out = d.slice(0, 7) !== view.calMonth;
+        html += `<div class="day${out ? ' out' : ''}${d === today ? ' today' : ''}"><div class="num">${Number(d.slice(8))}</div>` +
+          list.slice(0, 3).map(t => chipHtml(t, t.start === d ? 'Inicia' : '')).join('') +
+          (list.length > 3 ? `<div class="more">+ ${list.length - 3} atividades</div>` : '') + '</div>';
+      }
+      holder.innerHTML = html + '</div>';
+    }
+  } else {
+    const wk = view.calWeek, sun = addDaysISO(wk, 6);
+    if (viewMode === 'resumida'){
+      const anyTask = ids.some(id => sortedTasks(state.obras[id]).some(t => overlaps(t, wk, sun)));
+      if (!anyTask) holder.innerHTML = '<div class="card muted">Nenhuma atividade nesta semana.</div>';
+      ids.forEach(id => {
+        const o = state.obras[id];
+        const list = sortedTasks(o).filter(t => overlaps(t, wk, sun));
+        if (!list.length) return;
+        const box = document.createElement('div');
+        box.className = 'obra-week';
+        box.style.borderLeftColor = obraColor(id);
+        box.innerHTML = `<h4>${esc(o.name)}</h4>` + list.map(t => `<div class="line">${taskNameHtml(id, t)}
+          <span class="svc-tag ${t.start >= wk ? 'start' : 'cont'}">${t.start >= wk ? 'Inicia' : 'Continua'}</span>${flagsHtml(t)}
+          <span class="d">${esc(fmtTaskDates(t))}</span>${alertHtml(t)}</div>`).join('');
+        holder.appendChild(box);
+      });
+    } else {
+      let html = '<div class="days6">';
+      for (let i = 0; i < 6; i++){
+        const d = addDaysISO(wk, i);
+        const list = tasks.filter(t => t.start <= d && t.end >= d);
+        html += `<div class="col"><div class="h${d === today ? ' today' : ''}">${DOW[i]} ${fmtDM(d)}</div><div class="b">` +
+          (list.length ? list.map(t => chipHtml(t, t.start === d ? 'Inicia' : '')).join('') : '<div class="muted small">—</div>') + '</div></div>';
+      }
+      holder.innerHTML = html + '</div>';
+    }
+  }
+  c.appendChild(holder);
+  bindTaskNames(holder);
+}
+
+/* ===================================================================
+ * Obra
+ * =================================================================== */
+function renderObra(c){
+  const o = state.obras[view.obraId];
+  const head = document.createElement('div');
+  head.className = 'page-head';
+  const n = Object.keys(o.tasks).length;
+  head.innerHTML = `<div><h2><i style="display:inline-block;width:12px;height:12px;border-radius:3px;background:${obraColor(view.obraId)};margin-right:8px;vertical-align:2px;"></i>${esc(o.name)}${o.archived ? ' <span class="status-chip">Arquivada</span>' : ''}</h2>
+    <div class="sub">${n ? `${n} atividade${n > 1 ? 's' : ''} no cronograma` : 'Cronograma vazio'}</div></div>
+    <button class="btn ghost" type="button" id="obra-cfg">⚙ Obra</button>`;
+  c.appendChild(head);
+  $('obra-cfg').onclick = () => showObraSettingsModal(view.obraId);
+
+  const tabs = document.createElement('div');
+  tabs.className = 'tabs';
+  [['envio', 'Serviços previstos para a semana seguinte'], ['conferencia', 'Conferência do pedido'], ['calendario', 'Calendário'], ['cronograma', 'Cronograma']].forEach(([k, label]) => {
+    const b = document.createElement('button');
+    b.className = 'tab' + (view.tab === k ? ' active' : '');
+    b.textContent = label;
+    b.onclick = () => { view.tab = k; render(); };
+    tabs.appendChild(b);
+  });
+  c.appendChild(tabs);
+
+  if (!n && view.tab !== 'cronograma'){
+    c.insertAdjacentHTML('beforeend', `<div class="card empty-state"><h3>Esta obra ainda não tem cronograma</h3>
+      <p>Importe o cronograma em Excel ou cadastre as atividades na aba Cronograma.</p>
+      <button class="btn primary" id="go-crono">Ir para o cronograma</button></div>`);
+    $('go-crono').onclick = () => { view.tab = 'cronograma'; render(); };
+    return;
+  }
+  if (view.tab === 'envio') renderEnvioTab(c, view.obraId);
+  else if (view.tab === 'conferencia') renderConferenciaTab(c, view.obraId);
+  else if (view.tab === 'calendario') renderGantt(c, view.obraId);
+  else renderCronograma(c, view.obraId);
+}
+
+function trackerChips(container, o, wk, defs){
+  const w = o.weeks[wk] || {};
+  const tracker = document.createElement('div');
+  tracker.className = 'tracker';
+  tracker.style.marginBottom = '12px';
+  defs.forEach(([k, label]) => {
+    const lab = document.createElement('label');
+    lab.className = 'track-chip' + (w[k] ? ' on' : '');
+    lab.innerHTML = `<input type="checkbox"${w[k] ? ' checked' : ''} /> ${esc(label)}`;
+    lab.querySelector('input').onchange = async (e) => {
+      weekData(o, wk)[k] = e.target.checked;
+      lab.classList.toggle('on', e.target.checked);
+      await save();
+    };
+    tracker.appendChild(lab);
+  });
+  container.appendChild(tracker);
+}
+
+/* ---------- aba: serviços previstos para a semana seguinte (lista para o mestre) ---------- */
+function renderEnvioTab(c, obraId){
+  const o = state.obras[obraId];
+  weekBar(c);
+  const wk = view.target, dl = weekDeadlines(wk);
+  const { starting, continuing } = tasksInWeek(o, wk);
+  trackerChips(c, o, wk, [['previa', `Prévia enviada (seg ${fmtDM(dl.previa)})`], ['enviado', `Lista final enviada (seg ${fmtDM(dl.pedido)})`], ['equipe', 'Equipe alinhada']]);
+
+  const actions = document.createElement('div');
+  actions.className = 'actions-bar';
+  actions.innerHTML = `
+    <button class="btn primary" type="button" id="btn-img">⬇ Baixar imagem</button>
+    <button class="btn whats" type="button" id="btn-wa">WhatsApp</button>
+    <button class="btn" type="button" id="btn-copy">Copiar texto</button>`;
+  c.appendChild(actions);
+  c.insertAdjacentHTML('beforeend', legendStatusHtml());
+
+  const card = document.createElement('div');
+  card.className = 'export-card';
+  card.id = 'export-card';
+  const company = state.settings.company;
+  card.innerHTML = `<div class="export-head">
+      ${company ? `<div class="company">${esc(company)}</div>` : ''}
+      <h3>${esc(o.name)}</h3>
+      <div class="period">Serviços previstos — semana de ${esc(weekRangeLabel(wk))}</div>
+      <div class="svc-meta" style="margin-top:4px;">Enviar a lista de materiais até <b>segunda ${fmtDM(dl.pedido)}</b> · material na obra até <b>sexta ${fmtDM(dl.chegada)}</b></div>
+    </div>`;
+  let num = 0;
+  const group = (title, list, kind) => {
+    if (!list.length) return;
+    const gt = document.createElement('div'); gt.className = 'group-title'; gt.textContent = title; card.appendChild(gt);
+    list.forEach(t => card.appendChild(renderServiceItem(obraId, t, ++num, kind)));
+  };
+  group('Iniciam nesta semana', starting, 'start');
+  group('Continuam da semana anterior', continuing, 'cont');
+  if (!num) card.insertAdjacentHTML('beforeend', '<div class="export-empty">Nenhum serviço previsto para esta semana.</div>');
+  else card.insertAdjacentHTML('beforeend', `<div class="export-note">📦 Lista de materiais <b>estimada</b>, só como referência: confira, acrescente ou retire itens conforme a necessidade da obra antes de fazer o pedido.</div>`);
+  c.appendChild(card);
+  bindTaskNames(card);
+
+  $('btn-img').onclick = () => exportImage(o, wk);
+  $('btn-copy').onclick = () => copyText(buildWhatsText(o, wk));
+  $('btn-wa').onclick = () => openWhatsApp(buildWhatsText(o, wk));
+  if (!num) ['btn-img', 'btn-copy', 'btn-wa'].forEach(id => $(id).disabled = true);
+}
+
+function renderServiceItem(obraId, t, num, kind){
+  const o = state.obras[obraId];
+  const el = document.createElement('div');
+  el.className = 'svc';
+  const mats = taskMaterials(t);
+  el.innerHTML = `
+    <div class="svc-top">
+      <div class="svc-num">${num}</div>
+      <div class="svc-main">
+        <div class="svc-name">${taskNameHtml(obraId, t)}<span class="svc-tag ${kind}">${kind === 'start' ? 'Inicia' : 'Continua'}</span><span class="no-capture">${flagsHtml(t)}</span></div>
+        <div class="svc-meta">${esc(fmtTaskDates(t))}${t.etapa ? ' · ' + esc(t.etapa) : ''}</div>
+        ${alertHtml(t)}
+        ${mats.active.length || mats.removed.length ? `<div class="mat-title">Materiais estimados</div><ul class="mat-list"></ul>` : `<div class="mat-empty">Sem materiais cadastrados para esta atividade.</div>`}
+        <div class="svc-tools no-capture">
+          <input type="text" placeholder="Acrescentar material nesta obra" />
+          <button class="btn" type="button" data-act="add">+ Material</button>
+          <button class="btn ghost" type="button" data-act="std">Editar lista padrão</button>
+        </div>
+      </div>
+    </div>`;
+  const ul = el.querySelector('.mat-list');
+  if (ul){
+    mats.active.forEach(m => {
+      const li = document.createElement('li');
+      if (m.extra) li.className = 'extra';
+      li.innerHTML = `<span>${esc(m.text)}</span><button type="button" class="icon-btn no-capture" title="Retirar desta obra">✕</button>`;
+      li.querySelector('button').onclick = async () => {
+        const task = o.tasks[t.id];
+        if (m.extra) task.extras = task.extras.filter(x => normName(x) !== normName(m.text));
+        else task.removed = cleanList(task.removed.concat([m.text]));
+        await save(); render();
+      };
+      ul.appendChild(li);
+    });
+    mats.removed.forEach(m => {
+      const li = document.createElement('li');
+      li.className = 'removed no-capture';
+      li.innerHTML = `<span>${esc(m)}</span><button type="button" class="icon-btn" title="Devolver à lista">↺</button>`;
+      li.querySelector('button').onclick = async () => {
+        const task = o.tasks[t.id];
+        task.removed = task.removed.filter(x => normName(x) !== normName(m));
+        await save(); render();
+      };
+      ul.appendChild(li);
+    });
+  }
+  const input = el.querySelector('.svc-tools input');
+  const addExtra = async () => {
+    const v = input.value.trim();
+    if (!v){ input.focus(); return; }
+    addTaskMaterial(o.tasks[t.id], v);
+    await save(); render();
+  };
+  el.querySelector('[data-act=add]').onclick = addExtra;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') addExtra(); });
+  el.querySelector('[data-act=std]').onclick = () => showCatalogModal(t.text);
+  return el;
+}
+/** Acrescenta material à atividade desta obra (se já é da lista padrão e estava retirado, devolve). */
+function addTaskMaterial(task, v){
+  const base = catalogItems(task.text);
+  if (base.some(b => normName(b) === normName(v))) task.removed = task.removed.filter(x => normName(x) !== normName(v));
+  else task.extras = cleanList(task.extras.concat([v]));
+}
+
+function buildWhatsText(o, wk){
+  const { starting, continuing } = tasksInWeek(o, wk);
+  const dl = weekDeadlines(wk);
+  const lines = [];
+  if (state.settings.company) lines.push(state.settings.company.toUpperCase());
+  lines.push(`*Serviços previstos — ${o.name}*`);
+  lines.push(`Semana de ${weekRangeLabel(wk)}`);
+  lines.push(`Enviar a lista de materiais até *segunda ${fmtDM(dl.pedido)}* · material na obra até sexta ${fmtDM(dl.chegada)}`);
+  let n = 0;
+  const block = (title, list) => {
+    if (!list.length) return;
+    lines.push('', `*${title}*`);
+    list.forEach(t => {
+      n++;
+      lines.push(`${n}. ${t.text} (${fmtTaskDates(t)})`);
+      const mats = taskMaterials(t).active;
+      if (mats.length){
+        lines.push('   _Materiais estimados:_');
+        mats.forEach(m => lines.push('   • ' + m.text));
+      }
+    });
+  };
+  block('Iniciam nesta semana', starting);
+  block('Continuam da semana anterior', continuing);
+  lines.push('', '_Lista de materiais estimada, só como referência: confira, acrescente ou retire itens conforme a necessidade da obra antes de fazer o pedido._');
+  return lines.join('\n');
+}
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Texto copiado — é só colar no WhatsApp.');
+  }catch(e){
+    openModal(`<h3>Copiar texto</h3>
+      <div class="field"><textarea id="copy-area" rows="14" readonly>${esc(text)}</textarea>
+      <div class="hint">Selecione tudo e copie (Ctrl+C / segurar e copiar).</div></div>
+      <div class="modal-actions"><button class="btn primary" id="copy-close">Fechar</button></div>`, true);
+    const a = $('copy-area'); a.focus(); a.select();
+    $('copy-close').onclick = closeModal;
+  }
+}
+function openWhatsApp(text){ window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener'); }
+async function exportImage(o, wk){
+  const btn = $('btn-img');
+  const label = btn.textContent;
+  btn.textContent = 'Gerando…'; btn.disabled = true;
+  try{
+    if (!window.html2canvas) throw new Error('html2canvas não carregou');
+    const canvas = await html2canvas($('export-card'), {
+      backgroundColor: '#FFFFFF', scale: 2,
+      ignoreElements: el => el.classList && el.classList.contains('no-capture'),
+      // as cores de status são para você; na lista do mestre o nome sai neutro
+      onclone: doc => doc.querySelectorAll('#export-card .tname').forEach(el => { el.className = 'tname'; el.style.borderBottom = 'none'; })
+    });
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const slug = normName(o.name).replace(/ /g, '-') || 'obra';
+    const filename = `servicos-${slug}-${wk.slice(8, 10)}-${wk.slice(5, 7)}.png`;
+    const file = (typeof File === 'function') ? new File([blob], filename, { type: 'image/png' }) : null;
+    // no celular, abre o compartilhamento (dá pra mandar direto no WhatsApp)
+    if (file && navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia('(pointer: coarse)').matches){
+      try{ await navigator.share({ files: [file], title: `Serviços — ${o.name}` }); return; }
+      catch(e){ if (e && e.name === 'AbortError') return; }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }catch(e){
+    console.error(e);
+    toast('Não foi possível gerar a imagem: ' + (e.message || e), true);
+  }finally{
+    btn.textContent = label; btn.disabled = false;
+  }
+}
+
+/* ---------- aba: conferência do pedido ---------- */
+function renderConferenciaTab(c, obraId){
+  const o = state.obras[obraId];
+  weekBar(c);
+  const wk = view.target, dl = weekDeadlines(wk);
+  const { starting, continuing } = tasksInWeek(o, wk);
+  let total = 0, ok = 0;
+  starting.forEach(t => { const act = taskMaterials(t).active; total += act.length; ok += act.filter(m => (t.ordered || []).some(x => normName(x) === normName(m.text))).length; });
+
+  const head = document.createElement('div');
+  head.className = 'conf-head';
+  head.innerHTML = `<div><b>Pedido de segunda ${fmtDM(dl.pedido)}</b> <span class="muted">· atividades que iniciam na semana de ${weekRangeLabel(wk)}</span></div>
+    <span class="progress-pill${total && ok === total ? ' done' : ''}">${ok} de ${total} materiais conferidos</span>`;
+  c.appendChild(head);
+  trackerChips(c, o, wk, [['conferido', 'Pedido do mestre conferido']]);
+  c.insertAdjacentHTML('beforeend', `<p class="muted small" style="margin:0 0 12px;">Marque cada material que aparece no pedido do mestre. Quando todos estiverem marcados, a atividade passa para <b style="color:${MAT.solicitado.color}">Material solicitado</b>. Depois, ao chegar na obra, clique no nome e marque <b style="color:${MAT.entregue.color}">Material entregue</b>.</p>`);
+  c.insertAdjacentHTML('beforeend', legendStatusHtml());
+
+  if (!starting.length){
+    c.insertAdjacentHTML('beforeend', '<div class="card muted">Nenhuma atividade inicia nesta semana, então não há pedido para conferir.</div>');
+  }
+  starting.forEach((t, i) => {
+    const task = o.tasks[t.id];
+    const mats = taskMaterials(t);
+    const ordered = new Set((task.ordered || []).map(normName));
+    const box = document.createElement('div');
+    box.className = 'svc';
+    const done = mats.active.filter(m => ordered.has(normName(m.text))).length;
+    box.innerHTML = `<div class="svc-top"><div class="svc-num">${i + 1}</div><div class="svc-main">
+      <div class="svc-name">${taskNameHtml(obraId, t)}${flagsHtml(t)}</div>
+      <div class="svc-meta">${esc(fmtTaskDates(t))}${t.etapa ? ' · ' + esc(t.etapa) : ''}${mats.active.length ? ` · ${done}/${mats.active.length} conferidos` : ''}</div>
+      ${alertHtml(t)}
+      ${mats.active.length ? '<ul class="check-list"></ul>' : `<div class="mat-empty">Sem lista estimada para esta atividade. <button type="button" class="btn ghost" data-act="std" style="padding:2px 6px;">Cadastrar materiais</button></div>`}
+      <div class="svc-tools">
+        <input type="text" placeholder="Material pedido que não estava na lista" />
+        <button class="btn" type="button" data-act="add">+ Material</button>
+        ${mats.active.length ? `<button class="btn ghost" type="button" data-act="all">${done === mats.active.length ? 'Desmarcar todos' : 'Marcar todos'}</button>` : ''}
+      </div></div></div>`;
+    const ul = box.querySelector('.check-list');
+    if (ul){
+      mats.active.forEach(m => {
+        const on = ordered.has(normName(m.text));
+        const li = document.createElement('li');
+        li.className = (on ? 'ok' : '') + (m.extra ? ' extra' : '');
+        li.innerHTML = `<label><input type="checkbox"${on ? ' checked' : ''} /><span>${esc(m.text)}</span></label>`;
+        li.querySelector('input').onchange = async e => { await setOrdered(task, [m.text], e.target.checked); };
+        ul.appendChild(li);
+      });
+    }
+    const all = box.querySelector('[data-act=all]');
+    if (all) all.onclick = async () => { await setOrdered(task, mats.active.map(m => m.text), done !== mats.active.length); };
+    const std = box.querySelector('[data-act=std]');
+    if (std) std.onclick = () => showCatalogModal(t.text);
+    const input = box.querySelector('.svc-tools input');
+    const addIt = async () => {
+      const v = input.value.trim();
+      if (!v){ input.focus(); return; }
+      addTaskMaterial(task, v);
+      task.ordered = cleanList(task.ordered.concat([v]));
+      await save(); render();
+    };
+    box.querySelector('[data-act=add]').onclick = addIt;
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') addIt(); });
+    c.appendChild(box);
+  });
+  if (continuing.length){
+    c.insertAdjacentHTML('beforeend', `<div class="group-title" style="margin-top:18px;">Continuam da semana anterior</div>
+      <div class="card" id="conf-cont">${continuing.map(t => `<div class="line" style="padding:3px 0;">${taskNameHtml(obraId, t)}${flagsHtml(t)} <span class="muted small">· ${esc(fmtTaskDates(t))}</span></div>`).join('')}
+      <div class="muted small" style="margin-top:6px;">Já tiveram pedido. Se alguma foi prorrogada, confira se precisa de mais material.</div></div>`);
+  }
+  bindTaskNames(c);
+}
+async function setOrdered(task, items, on){
+  const keys = new Set(items.map(normName));
+  if (on) task.ordered = cleanList(task.ordered.concat(items));
+  else task.ordered = task.ordered.filter(x => !keys.has(normName(x)));
+  const act = taskMaterials(task).active;
+  let msg = '';
+  if (on && !task.mat && act.length && act.every(m => task.ordered.some(x => normName(x) === normName(m.text)))){
+    task.mat = 'solicitado';
+    msg = 'Todos os materiais conferidos: atividade marcada como Material solicitado.';
+  }
+  await save();
+  render();
+  if (msg) toast(msg);
+}
+
+/* ---------- aba: calendário da obra ---------- */
+function renderGantt(c, obraId){
+  const o = state.obras[obraId];
+  const list = sortedTasks(o);
+  const first = mondayOfISO(list.reduce((m, t) => t.start < m ? t.start : m, list[0].start));
+  const lastEnd = list.reduce((m, t) => t.end > m ? t.end : m, list[0].end);
+  const today = todayISO(), nowWk = mondayOfISO(today);
+  const hasEtapas = list.some(t => t.etapa);
+  const wrap = document.createElement('div');
+  wrap.className = 'gantt-wrap';
+  const nameCell = t => `<td class="name-col"><div class="t">${taskNameHtml(obraId, t)}${flagsHtml(t)}</div><div class="d">${esc(fmtTaskDates(t))}</div></td>`;
+  const barCls = t => 'bar' + (t.mat && t.mat !== 'na' ? ' st-bar-' + t.mat : '');
+  let html;
+  if (viewMode === 'resumida'){
+    const weeks = [];
+    for (let wk = first; wk <= lastEnd && weeks.length < 104; wk = addDaysISO(wk, 7)) weeks.push(wk);
+    const cls = wk => 'wk' + (wk === nowWk ? ' now' : '') + (wk === view.target ? ' target' : '');
+    html = `<table class="gantt"><thead><tr><th class="name-col">Atividade</th>` +
+      weeks.map(wk => `<th class="${cls(wk)}" data-wk="${wk}" title="Semana de ${weekRangeLabel(wk)}">${fmtDM(wk)}</th>`).join('') + `</tr></thead><tbody>`;
+    let lastEtapa = null;
+    list.forEach(t => {
+      if (hasEtapas && t.etapa !== lastEtapa){ lastEtapa = t.etapa; html += `<tr class="etapa"><td class="name-col">${esc(t.etapa || 'Sem etapa')}</td><td colspan="${weeks.length}"></td></tr>`; }
+      html += `<tr>${nameCell(t)}` + weeks.map(wk => {
+        const sun = addDaysISO(wk, 6);
+        const on = overlaps(t, wk, sun);
+        return `<td class="${cls(wk)}">${on ? `<div class="${barCls(t)}${t.start >= wk ? ' first' : ''}${t.end <= sun ? ' last' : ''}"></div>` : ''}</td>`;
+      }).join('') + `</tr>`;
+    });
+    html += `</tbody></table>`;
+  } else {
+    // dias úteis + sábado (domingo fora)
+    const days = [];
+    for (let d = first; d <= addDaysISO(mondayOfISO(lastEnd), 5) && days.length < 400; d = addDaysISO(d, 1)){ if (fromISO(d).getDay() !== 0) days.push(d); }
+    const weeks = [];
+    days.forEach(d => { const wk = mondayOfISO(d); if (!weeks.length || weeks[weeks.length - 1].wk !== wk) weeks.push({ wk, n: 0 }); weeks[weeks.length - 1].n++; });
+    const L = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+    html = `<table class="gantt"><thead><tr><th class="name-col" rowspan="2">Atividade</th>` +
+      weeks.map(w => `<th class="wkh" colspan="${w.n}" data-wk="${w.wk}" title="Ver serviços desta semana">${w.wk === view.target ? '▸ ' : ''}Sem ${fmtDM(w.wk)}</th>`).join('') + `</tr><tr>` +
+      days.map(d => `<th class="dy${fromISO(d).getDay() === 1 ? ' mon' : ''}${d === today ? ' today' : ''}">${L[fromISO(d).getDay()]}<br>${Number(d.slice(8))}</th>`).join('') + `</tr></thead><tbody>`;
+    let lastEtapa = null;
+    list.forEach(t => {
+      if (hasEtapas && t.etapa !== lastEtapa){ lastEtapa = t.etapa; html += `<tr class="etapa"><td class="name-col">${esc(t.etapa || 'Sem etapa')}</td><td colspan="${days.length}"></td></tr>`; }
+      html += `<tr>${nameCell(t)}` + days.map((d, i) => {
+        const on = t.start <= d && t.end >= d;
+        const prevOn = i > 0 && t.start <= days[i - 1] && t.end >= days[i - 1];
+        const nextOn = i < days.length - 1 && t.start <= days[i + 1] && t.end >= days[i + 1];
+        return `<td class="dy${fromISO(d).getDay() === 1 ? ' mon' : ''}${d === today ? ' today' : ''}">${on ? `<div class="${barCls(t)}${prevOn ? '' : ' first'}${nextOn ? '' : ' last'}"></div>` : ''}</td>`;
+      }).join('') + `</tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  c.insertAdjacentHTML('beforeend', `<div class="muted small" style="margin-bottom:10px;">${viewMode === 'resumida' ? 'Visão resumida: cada coluna é uma semana.' : 'Visão completa: cada coluna é um dia (seg a sáb).'} Clique no cabeçalho de uma semana para ver os serviços dela, ou no nome da atividade para marcar material e prazo.</div>`);
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('th[data-wk]').forEach(th => th.onclick = () => { view.target = th.dataset.wk; view.tab = 'envio'; render(); });
+  c.appendChild(wrap);
+  c.insertAdjacentHTML('beforeend', `<div class="legend">
+    <span><i style="background:var(--bar)"></i>Sem status</span>
+    <span><i style="background:${MAT.solicitado.color}"></i>Material solicitado</span>
+    <span><i style="background:${MAT.entregue.color}"></i>Material entregue</span>
+    <span><i style="background:${MAT.atrasado.color}"></i>Material atrasado</span>
+    <span><i style="background:#FDECC0"></i>Hoje / semana atual</span></div>`);
+  bindTaskNames(wrap);
+  setTimeout(() => {
+    const th = wrap.querySelector('th.now') || wrap.querySelector('th.today') || wrap.querySelector('th.target');
+    if (th) wrap.scrollLeft = Math.max(0, th.offsetLeft - 320);
+  }, 0);
+}
+
+/* ---------- aba: cronograma (lista editável + importação) ---------- */
+function renderCronograma(c, obraId){
+  const o = state.obras[obraId];
+  const list = sortedTasks(o);
+  const bar = document.createElement('div');
+  bar.className = 'actions-bar';
+  bar.style.marginTop = '0';
+  bar.innerHTML = `
+    <button class="btn primary" type="button" id="cr-import">⬆ Importar Excel</button>
+    <button class="btn" type="button" id="cr-paste">Colar do Excel</button>
+    <button class="btn" type="button" id="cr-add">+ Atividade</button>
+    <span class="spacer"></span>
+    <button class="btn" type="button" id="cr-shift"${list.length ? '' : ' disabled'}>Deslocar datas</button>
+    <input type="file" id="cr-file" accept=".xlsx,.xls,.xlsm,.csv,.ods" hidden />`;
+  c.appendChild(bar);
+  $('cr-import').onclick = () => $('cr-file').click();
+  $('cr-file').onchange = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try{
+      toast('Lendo o arquivo…');
+      const sheets = await readWorkbookFile(f);
+      showImportPreview(obraId, sheets, f.name);
+    }catch(err){
+      console.error(err);
+      toast('Não consegui ler esse arquivo: ' + (err.message || err), true);
+    }
+  };
+  $('cr-paste').onclick = () => showPasteModal(obraId);
+  $('cr-add').onclick = () => showTaskModal(obraId, null);
+  $('cr-shift').onclick = () => showShiftModal(obraId);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  if (!list.length){
+    card.innerHTML = `<div class="empty-state"><h3>Cronograma vazio</h3>
+      <p>Importe a planilha do cronograma (com colunas de atividade, início e término ou duração; a importação reconhece os nomes mais comuns),
+      cole as linhas copiadas do Excel ou cadastre uma a uma.</p></div>`;
+    c.appendChild(card);
+    return;
+  }
+  const hasEtapa = list.some(t => t.etapa);
+  card.innerHTML = `<div class="table-wrap"><table class="tbl"><thead><tr>
+      ${hasEtapa ? '<th>Etapa</th>' : ''}<th>Atividade</th><th>${viewMode === 'resumida' ? 'Semanas' : 'Início'}</th>${viewMode === 'resumida' ? '' : '<th>Término</th>'}<th>Duração</th><th>Materiais</th><th></th>
+    </tr></thead><tbody>${list.map(t => {
+      const nMat = taskMaterials(t).active.length;
+      const dur = viewMode === 'resumida' ? `${weeksSpan(t)} sem` : `${diffDays(t.start, t.end) + 1} dias`;
+      const dates = viewMode === 'resumida'
+        ? (weeksSpan(t) === 1 ? `Sem ${fmtDM(mondayOfISO(t.start))}` : `Sem ${fmtDM(mondayOfISO(t.start))} → ${fmtDM(mondayOfISO(t.end))}`)
+        : fmtDMY(t.start);
+      return `<tr>
+        ${hasEtapa ? `<td class="muted">${esc(t.etapa)}</td>` : ''}
+        <td><b>${taskNameHtml(obraId, t)}</b>${flagsHtml(t)}${alertHtml(t) ? '<br>' + alertHtml(t) : ''}</td>
+        <td class="nowrap">${dates}</td>${viewMode === 'resumida' ? '' : `<td class="nowrap">${fmtDMY(t.end)}</td>`}
+        <td class="nowrap">${dur}</td>
+        <td class="nowrap"><button class="icon-btn" data-mat="${t.id}" title="Materiais estimados desta atividade">${nMat ? `🧱 ${nMat} ${nMat > 1 ? 'itens' : 'item'}` : '<span style="color:var(--warn)">+ cadastrar</span>'}</button></td>
+        <td class="nowrap"><button class="icon-btn" data-edit="${t.id}" title="Editar">✎</button><button class="icon-btn" data-del="${t.id}" title="Apagar">🗑</button></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  card.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => showTaskModal(obraId, b.dataset.edit));
+  card.querySelectorAll('[data-mat]').forEach(b => b.onclick = () => showCatalogModal(o.tasks[b.dataset.mat].text));
+  card.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    const t = o.tasks[b.dataset.del];
+    if (!confirm(`Apagar a atividade "${t.text}" do cronograma?`)) return;
+    delete o.tasks[b.dataset.del];
+    await save(); render();
+  });
+  c.appendChild(card);
+  bindTaskNames(card);
+}
+
+/* ===================================================================
+ * Materiais por atividade (catálogo)
+ * =================================================================== */
+function renderCatalog(c){
+  c.insertAdjacentHTML('beforeend', `<div class="page-head"><div><h2>Materiais por atividade</h2>
+    <div class="sub">Lista estimada de materiais de cada atividade. Vale para todas as obras: cadastre uma vez e ela aparece sempre que a atividade estiver prevista.</div></div>
+    <button class="btn primary" type="button" id="cat-new">+ Atividade</button></div>`);
+  $('cat-new').onclick = () => showCatalogModal('');
+  const names = allActivityNames();
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<div class="row" style="margin-bottom:10px;"><input class="search" type="text" id="cat-search" placeholder="Buscar atividade ou material" value="${esc(view.catFilter)}" />
+    <span class="muted small">${names.filter(n => catalogItems(n).length).length} de ${names.length} atividades com lista</span></div><div id="cat-list"></div>`;
+  c.appendChild(card);
+  const listEl = $('cat-list');
+  const draw = () => {
+    const q = normName(view.catFilter);
+    const shown = names.filter(n => !q || normName(n).includes(q) || catalogItems(n).some(i => normName(i).includes(q)));
+    shown.sort((a, b) => (catalogItems(a).length ? 1 : 0) - (catalogItems(b).length ? 1 : 0) || a.localeCompare(b, 'pt-BR'));
+    listEl.innerHTML = shown.length ? '' : '<div class="muted" style="padding:12px 4px;">Nenhuma atividade encontrada.</div>';
+    shown.forEach(n => {
+      const items = catalogItems(n);
+      const row = document.createElement('div');
+      row.className = 'mat-row';
+      row.innerHTML = `<div style="flex:1;min-width:0;"><div class="name">${esc(n)}</div>
+        <div class="items${items.length ? '' : ' none'}">${items.length ? esc(items.join(' · ')) : 'Sem materiais cadastrados'}</div></div>
+        <button class="btn" type="button">${items.length ? 'Editar' : 'Cadastrar'}</button>`;
+      row.querySelector('button').onclick = () => showCatalogModal(n);
+      listEl.appendChild(row);
+    });
+  };
+  draw();
+  const search = $('cat-search');
+  search.oninput = () => { view.catFilter = search.value; draw(); };
+}
+
+function showCatalogModal(activityName){
+  const isNew = !activityName;
+  const items = isNew ? [] : catalogItems(activityName);
+  openModal(`<h3>${isNew ? 'Materiais de uma atividade' : 'Materiais estimados'}</h3>
+    <div class="field"><label for="cat-name">Atividade</label>
+      <input type="text" id="cat-name" value="${esc(activityName)}" ${isNew ? '' : 'readonly'} placeholder="Ex: Executar infra elétrica" list="cat-names" />
+      <datalist id="cat-names">${allActivityNames().map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+      ${isNew ? '<div class="hint">Use o mesmo nome da atividade no cronograma (maiúsculas e acentos não importam).</div>' : ''}</div>
+    <div class="field"><label for="cat-items">Materiais (um por linha)</label>
+      <textarea id="cat-items" rows="10" placeholder="Eletroduto corrugado 3/4&quot;
+Caixa 4x2 para drywall
+Cabo flexível 2,5 mm²">${esc(items.join('\n'))}</textarea>
+      <div class="hint">É a lista padrão: vale para todas as obras. Para mudar só numa obra, use o ✕ e o "+ Material" na lista de serviços.</div></div>
+    <div class="modal-error" id="cat-err"></div>
+    <div class="modal-actions"><button class="btn" id="cat-cancel">Cancelar</button><button class="btn primary" id="cat-save">Salvar</button></div>`);
+  $('cat-cancel').onclick = closeModal;
+  $('cat-save').onclick = async () => {
+    const name = $('cat-name').value.trim();
+    if (!name) return showError('cat-err', 'Digite o nome da atividade.');
+    const list = $('cat-items').value.split('\n');
+    if (isNew && !cleanList(list).length) return showError('cat-err', 'Digite pelo menos um material.');
+    setCatalogItems(name, list);
+    closeModal();
+    if (await save()) toast('Lista de materiais salva.');
+    render();
+  };
+}
+
+/* ===================================================================
+ * Modais: obra, atividade, importação, deslocamento
+ * =================================================================== */
+function nextMondayISO(){ return addDaysISO(mondayOfISO(todayISO()), 7); }
+
+function showNewObraModal(){
+  openModal(`<h3>Nova obra</h3>
+    <div class="field"><label for="no-name">Nome da obra</label><input type="text" id="no-name" placeholder="Ex: Sala 1207 — Consultório" /></div>
+    <div class="hint muted small">Depois de criar, importe o cronograma na aba Cronograma.</div>
+    <div class="modal-error" id="no-err"></div>
+    <div class="modal-actions"><button class="btn" id="no-cancel">Cancelar</button><button class="btn primary" id="no-ok">Criar obra</button></div>`);
+  $('no-cancel').onclick = closeModal;
+  $('no-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('no-ok').click(); });
+  $('no-ok').onclick = async () => {
+    const name = $('no-name').value.trim();
+    if (!name) return showError('no-err', 'Digite o nome da obra.');
+    if (Object.values(state.obras).some(o => normName(o.name) === normName(name))) return showError('no-err', 'Já existe uma obra com esse nome.');
+    const id = newId('o');
+    state.obras[id] = { name, archived: false, createdAt: new Date().toISOString(), tasks: {}, weeks: {} };
+    closeModal();
+    await save();
+    view.section = 'obra'; view.obraId = id; view.tab = 'cronograma';
+    render();
+  };
+}
+
+function showObraSettingsModal(obraId){
+  const o = state.obras[obraId];
+  openModal(`<h3>Obra</h3>
+    <div class="field"><label for="os-name">Nome</label><input type="text" id="os-name" value="${esc(o.name)}" /></div>
+    <div class="modal-error" id="os-err"></div>
+    <div class="modal-actions">
+      <button class="btn danger" id="os-del">Apagar obra</button>
+      <button class="btn" id="os-arch">${o.archived ? 'Desarquivar' : 'Arquivar'}</button>
+      <span class="spacer"></span>
+      <button class="btn" id="os-cancel">Cancelar</button><button class="btn primary" id="os-ok">Salvar</button></div>`);
+  $('os-cancel').onclick = closeModal;
+  $('os-ok').onclick = async () => {
+    const name = $('os-name').value.trim();
+    if (!name) return showError('os-err', 'Digite o nome da obra.');
+    if (Object.keys(state.obras).some(id => id !== obraId && normName(state.obras[id].name) === normName(name))) return showError('os-err', 'Já existe uma obra com esse nome.');
+    o.name = name; closeModal(); await save(); render();
+  };
+  $('os-arch').onclick = async () => { o.archived = !o.archived; closeModal(); await save(); render(); };
+  $('os-del').onclick = async () => {
+    if (!confirm(`Apagar a obra "${o.name}" e todo o cronograma dela? Isso não pode ser desfeito.`)) return;
+    delete state.obras[obraId]; closeModal(); view.section = 'geral'; view.obraId = null; await save(); render();
+  };
+}
+
+function showTaskModal(obraId, tid){
+  const o = state.obras[obraId];
+  const t = tid ? o.tasks[tid] : null;
+  const etapas = Array.from(new Set(Object.values(o.tasks).map(x => x.etapa).filter(Boolean)));
+  const byWeek = viewMode === 'resumida';
+  const initWeek = t ? mondayOfISO(t.start) : nextMondayISO();
+  const initWeeks = t ? weeksSpan(t) : 1;
+  openModal(`<h3>${t ? 'Editar atividade' : 'Nova atividade'}</h3>
+    <div class="field"><label for="tk-text">Atividade</label><input type="text" id="tk-text" value="${esc(t ? t.text : '')}" list="tk-names" placeholder="Ex: Executar infra elétrica" />
+      <datalist id="tk-names">${allActivityNames().map(n => `<option value="${esc(n)}">`).join('')}</datalist></div>
+    <div class="field"><label for="tk-etapa">Etapa (opcional)</label><input type="text" id="tk-etapa" value="${esc(t ? t.etapa : '')}" list="tk-etapas" placeholder="Ex: Instalações" />
+      <datalist id="tk-etapas">${etapas.map(n => `<option value="${esc(n)}">`).join('')}</datalist></div>
+    ${byWeek ? `<div class="grid2">
+      <div class="field"><label for="tk-week">Semana de início</label><input type="date" id="tk-week" value="${initWeek}" /><div class="hint">Qualquer dia serve: vale a semana inteira.</div></div>
+      <div class="field"><label for="tk-weeks">Duração (semanas)</label><input type="number" id="tk-weeks" min="1" step="1" value="${initWeeks}" /></div>
+    </div><div class="hint muted small" style="margin:-4px 0 6px;">Para datas exatas, use a visão Completa (dias), no topo da página.</div>`
+    : `<div class="grid2">
+      <div class="field"><label for="tk-start">Início</label><input type="date" id="tk-start" value="${t ? t.start : nextMondayISO()}" /></div>
+      <div class="field"><label for="tk-end">Término</label><input type="date" id="tk-end" value="${t ? t.end : addDaysISO(nextMondayISO(), 4)}" /></div>
+    </div>`}
+    <div class="modal-error" id="tk-err"></div>
+    <div class="modal-actions"><button class="btn" id="tk-cancel">Cancelar</button><button class="btn primary" id="tk-ok">Salvar</button></div>`);
+  $('tk-cancel').onclick = closeModal;
+  $('tk-ok').onclick = async () => {
+    const text = $('tk-text').value.trim(), etapa = $('tk-etapa').value.trim();
+    if (!text) return showError('tk-err', 'Digite o nome da atividade.');
+    let start, end;
+    if (byWeek){
+      const wkIn = $('tk-week').value, n = Math.round(Number($('tk-weeks').value));
+      if (!isISO(wkIn)) return showError('tk-err', 'Escolha a semana de início.');
+      if (!(n >= 1 && n <= 104)) return showError('tk-err', 'Duração em semanas: de 1 a 104.');
+      if (t && mondayOfISO(wkIn) === initWeek && n === initWeeks){ start = t.start; end = t.end; }   // sem mudança: mantém os dias exatos
+      else { start = mondayOfISO(wkIn); end = addDaysISO(start, 7 * n - 2); }                        // segunda a sábado
+    } else {
+      start = $('tk-start').value; end = $('tk-end').value || start;
+      if (!isISO(start)) return showError('tk-err', 'Escolha a data de início.');
+      if (end < start) return showError('tk-err', 'O término não pode ser antes do início.');
+    }
+    if (t) Object.assign(t, { text, etapa, start, end });
+    else addTask(o, { text, etapa, start, end });
+    closeModal(); await save(); render();
+  };
+}
+
+function showImportPreview(obraId, sheets, fileName){
+  const usable = sheets.filter(s => s.result.items.length);
+  if (!usable.length){
+    openModal(`<h3>Não encontrei atividades nessa planilha</h3>
+      <p class="muted">A importação procura colunas de <b>atividade</b>, <b>início</b> e <b>término</b> (ou duração). Confira se a planilha tem essas colunas com datas, ou envie o arquivo para ajustar a leitura ao modelo da empresa.</p>
+      <div class="modal-actions"><button class="btn primary" id="ip-close">Fechar</button></div>`);
+    $('ip-close').onclick = closeModal;
+    return;
+  }
+  usable.sort((a, b) => b.result.items.length - a.result.items.length);
+  showItemsPreview(obraId, usable, fileName);
+}
+function showPasteModal(obraId){
+  openModal(`<h3>Colar do Excel</h3>
+    <div class="field"><label for="ps-text">Copie as linhas do cronograma no Excel (com ou sem o cabeçalho) e cole aqui</label>
+      <textarea id="ps-text" rows="10" placeholder="Atividade	Início	Término
+Demolição de paredes	16/11/2026	21/11/2026
+Executar infra elétrica	23/11/2026	05/12/2026"></textarea>
+      <div class="hint">Colunas reconhecidas: Atividade/Tarefa/Serviço, Início, Término/Fim, Duração (dias ou semanas) e Etapa. Sem cabeçalho, uso a ordem atividade · início · término.</div></div>
+    <div class="modal-error" id="ps-err"></div>
+    <div class="modal-actions"><button class="btn" id="ps-cancel">Cancelar</button><button class="btn primary" id="ps-ok">Continuar</button></div>`, true);
+  $('ps-cancel').onclick = closeModal;
+  $('ps-ok').onclick = () => {
+    const res = parsePasted($('ps-text').value);
+    if (!res.items.length) return showError('ps-err', 'Não encontrei linhas com atividade e data de início. Confira se as datas estão no formato dd/mm/aaaa.');
+    showItemsPreview(obraId, [{ name: 'Texto colado', result: res }], 'texto colado');
+  };
+}
+function showItemsPreview(obraId, sheets, sourceName){
+  const o = state.obras[obraId];
+  let current = 0;
+  const hasTasks = Object.keys(o.tasks).length > 0;
+  let mode = hasTasks ? 'replace' : 'add';
+  const draw = () => {
+    const res = sheets[current].result;
+    const hasEtapa = res.items.some(i => i.etapa);
+    openModal(`<h3>Importar cronograma — ${esc(sourceName)}</h3>
+      ${sheets.length > 1 ? `<div class="field"><label for="ip-sheet">Aba da planilha</label><select id="ip-sheet">${sheets.map((s, i) => `<option value="${i}"${i === current ? ' selected' : ''}>${esc(s.name)} (${s.result.items.length} atividades)</option>`).join('')}</select></div>` : ''}
+      <p class="muted small" style="margin-top:0;">${res.items.length} atividades encontradas${res.skipped ? ` · ${res.skipped} linhas ignoradas (sem atividade ou sem data)` : ''}. Desmarque o que não for atividade (ex.: linhas de resumo).</p>
+      <div class="preview-box"><table class="tbl"><thead><tr><th><input type="checkbox" id="ip-all" checked /></th>${hasEtapa ? '<th>Etapa</th>' : ''}<th>Atividade</th><th>Início</th><th>Término</th></tr></thead>
+      <tbody>${res.items.map((it, i) => `<tr><td><input type="checkbox" data-i="${i}" checked /></td>${hasEtapa ? `<td class="muted">${esc(it.etapa)}</td>` : ''}<td>${esc(it.text)}</td><td class="nowrap">${fmtDMY(it.start)}</td><td class="nowrap">${fmtDMY(it.end)}</td></tr>`).join('')}</tbody></table></div>
+      ${hasTasks ? `<div class="field" style="margin-top:12px;"><label>Esta obra já tem ${Object.keys(o.tasks).length} atividades</label>
+        <div class="seg"><button type="button" id="ip-replace" class="${mode === 'replace' ? 'active' : ''}">Substituir o cronograma</button><button type="button" id="ip-add" class="${mode === 'add' ? 'active' : ''}">Acrescentar ao atual</button></div></div>` : ''}
+      <div class="modal-error" id="ip-err"></div>
+      <div class="modal-actions"><button class="btn" id="ip-cancel">Cancelar</button><button class="btn primary" id="ip-ok">Importar</button></div>`, true);
+    if ($('ip-sheet')) $('ip-sheet').onchange = e => { current = Number(e.target.value); draw(); };
+    $('ip-all').onchange = e => document.querySelectorAll('#modal [data-i]').forEach(cb => cb.checked = e.target.checked);
+    if ($('ip-replace')){
+      $('ip-replace').onclick = () => { mode = 'replace'; $('ip-replace').classList.add('active'); $('ip-add').classList.remove('active'); };
+      $('ip-add').onclick = () => { mode = 'add'; $('ip-add').classList.add('active'); $('ip-replace').classList.remove('active'); };
+    }
+    $('ip-cancel').onclick = closeModal;
+    $('ip-ok').onclick = async () => {
+      const chosen = Array.from(document.querySelectorAll('#modal [data-i]')).filter(cb => cb.checked).map(cb => res.items[Number(cb.dataset.i)]);
+      if (!chosen.length) return showError('ip-err', 'Marque pelo menos uma atividade.');
+      if (mode === 'replace' && hasTasks){
+        if (!confirm('Substituir todas as atividades atuais desta obra pelas importadas?')) return;
+        o.tasks = {};
+      }
+      let order = nextOrder(o);
+      chosen.forEach(it => addTask(o, Object.assign({}, it, { order: order++ })));
+      closeModal();
+      if (await save()) toast(`${chosen.length} atividades importadas.`);
+      view.tab = 'calendario';
+      render();
+    };
+  };
+  draw();
+}
+
+function showShiftModal(obraId){
+  const o = state.obras[obraId];
+  const list = sortedTasks(o);
+  const byWeek = viewMode === 'resumida';
+  openModal(`<h3>Deslocar datas</h3>
+    <p class="muted small" style="margin-top:0;">Move várias atividades de uma vez (atraso geral da obra, por exemplo). Para uma atividade só, clique no nome dela e use "Adiar" ou "Atrasada".</p>
+    <div class="grid2">
+      <div class="field"><label for="sh-from">Atividades que começam a partir de</label><input type="date" id="sh-from" value="${list[0].start}" /></div>
+      <div class="field"><label for="sh-n">Deslocar quantas ${byWeek ? 'semanas' : 'dias'}</label><input type="number" id="sh-n" value="1" step="1" />
+        <div class="hint">Negativo antecipa.</div></div>
+    </div>
+    <div class="modal-error" id="sh-err"></div>
+    <div class="modal-actions"><button class="btn" id="sh-cancel">Cancelar</button><button class="btn primary" id="sh-ok">Deslocar</button></div>`);
+  $('sh-cancel').onclick = closeModal;
+  $('sh-ok').onclick = async () => {
+    const from = $('sh-from').value, n = Math.round(Number($('sh-n').value));
+    if (!isISO(from)) return showError('sh-err', 'Escolha a data.');
+    if (!n) return showError('sh-err', 'Digite um número diferente de zero.');
+    const days = byWeek ? n * 7 : n;
+    let count = 0;
+    Object.values(o.tasks).forEach(t => { if (t.start >= from){ t.start = addDaysISO(t.start, days); t.end = addDaysISO(t.end, days); count++; } });
+    closeModal();
+    if (await save()) toast(`${count} atividades deslocadas.`);
+    render();
+  };
+}
+
+/* ===================================================================
+ * Configurações
+ * =================================================================== */
+function renderSettings(c){
+  c.insertAdjacentHTML('beforeend', `<div class="page-head"><div><h2>Configurações</h2></div></div>
+    <div class="card">
+      <div class="field" style="max-width:420px;"><label for="st-company">Nome da empresa (aparece na imagem e no texto)</label>
+        <input type="text" id="st-company" value="${esc(state.settings.company)}" placeholder="Ex: Conceito Engenharia" /></div>
+      <button class="btn primary" id="st-save">Salvar</button>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 6px;font-size:15px;">Cópia de segurança</h3>
+      <p class="muted small" style="margin:0 0 10px;">${backend === 'firebase' ? 'Os dados ficam na nuvem (Firebase) e abrem em qualquer aparelho.' : 'Sem conexão com a nuvem: os dados estão só neste navegador. Baixe uma cópia de vez em quando.'}</p>
+      <div class="row"><button class="btn" id="st-export">⬇ Baixar cópia (.json)</button><button class="btn" id="st-import">⬆ Restaurar cópia</button>
+      <input type="file" id="st-file" accept=".json,application/json" hidden /></div>
+      <p class="muted small" style="margin:10px 0 0;">Versão ${APP_VERSION}</p>
+    </div>`);
+  $('st-save').onclick = async () => { state.settings.company = $('st-company').value.trim(); if (await save()) toast('Configurações salvas.'); render(); };
+  $('st-export').onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `planejamento-obras-${todayISO()}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  };
+  $('st-import').onclick = () => $('st-file').click();
+  $('st-file').onchange = async e => {
+    const f = e.target.files && e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try{
+      const data = normalizeState(JSON.parse(await f.text()));
+      const n = Object.keys(data.obras).length;
+      if (!confirm(`Restaurar a cópia com ${n} obra${n === 1 ? '' : 's'}? Os dados atuais serão substituídos.`)) return;
+      state = data; await save(); view.section = 'geral'; render(); toast('Cópia restaurada.');
+    }catch(err){ toast('Arquivo inválido: ' + (err.message || err), true); }
+  };
+}
+
+/* ===================================================================
+ * Início
+ * =================================================================== */
+async function init(){
+  try{ state = normalizeState(await loadRaw()); }
+  catch(e){ console.error(e); state = normalizeState({}); }
+  render();
+}
+// ao voltar para a aba: recarrega da nuvem (pode ter sido editado em outro aparelho)
+let lastDay = todayISO();
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !state || modalOpen()) return;
+  if (todayISO() !== lastDay){ lastDay = todayISO(); view.target = defaultTargetMonday(); }
+  if (backend === 'firebase'){ try{ state = normalizeState(await loadRaw()); }catch(e){} }
+  if (!modalOpen()) render();
+});
+init();
+</script>
+</body>
+</html>
